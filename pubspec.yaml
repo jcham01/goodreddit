@@ -1,7 +1,7 @@
 name: goodreddit
 description: "A Reddit subreddit research tool — browser-session auth, semantic search ranking, and LLM-assisted analysis."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.10.0
