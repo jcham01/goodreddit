@@ -112,27 +112,27 @@ class _UpdateGateState extends State<UpdateGate> {
                   closeDialog();
                 default:
                   closeDialog();
-                  _fallbackToBrowser(update);
+                  _fallbackToBrowser(update, '${event.status} ${event.value ?? ''}');
               }
             },
-            onError: (Object _) {
+            onError: (Object e) {
               closeDialog();
-              _fallbackToBrowser(update);
+              _fallbackToBrowser(update, '$e');
             },
           );
-    } catch (_) {
+    } catch (e) {
       closeDialog();
-      await _fallbackToBrowser(update);
+      await _fallbackToBrowser(update, '$e');
     }
   }
 
   /// Last resort when the in-app download fails: hand the APK URL to the
   /// browser so the user can still update.
-  Future<void> _fallbackToBrowser(AppUpdate update) async {
+  Future<void> _fallbackToBrowser(AppUpdate update, String reason) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('In-app download failed — opening the browser instead.'),
+      SnackBar(
+        content: Text('In-app update failed ($reason) — opening the browser.'),
       ),
     );
     await launchUrl(
