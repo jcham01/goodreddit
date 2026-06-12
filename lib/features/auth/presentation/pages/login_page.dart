@@ -28,7 +28,8 @@ class _LoginPageState extends State<LoginPage> {
   bool _popped = false;
 
   static final _settings = InAppWebViewSettings(
-    userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) '
+    userAgent:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) '
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/126.0.0.0 Mobile Safari/537.36',
     javaScriptEnabled: true,
@@ -69,7 +70,8 @@ class _LoginPageState extends State<LoginPage> {
       final url = await _controller!.getUrl();
       if (!(url?.host.contains('reddit.com') ?? false)) return;
 
-      final result = await _controller!.callAsyncJavaScript(functionBody: '''
+      final result = await _controller!.callAsyncJavaScript(
+        functionBody: '''
         try {
           const r = await fetch('/api/me.json',
             { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
@@ -77,7 +79,8 @@ class _LoginPageState extends State<LoginPage> {
           const j = await r.json();
           return (j && j.data && j.data.name) ? j.data.name : null;
         } catch (e) { return null; }
-      ''');
+      ''',
+      );
       final name = result?.value;
       if (name is String && name.isNotEmpty) {
         _finish('u/$name');

@@ -29,8 +29,9 @@ class ResearchSessionModel extends ResearchSession {
 
   factory ResearchSessionModel.fromJson(Map<String, dynamic> json) {
     final results = (json['rankedResults'] as List? ?? [])
-        .map((e) =>
-            SubredditScoreModel.fromJsonStored(e as Map<String, dynamic>))
+        .map(
+          (e) => SubredditScoreModel.fromJsonStored(e as Map<String, dynamic>),
+        )
         .cast<SubredditScore>()
         .toList();
     return ResearchSessionModel(
@@ -50,17 +51,19 @@ class ResearchSessionModel extends ResearchSession {
       'id': id,
       'query': query,
       'rankedResults': rankedResults
-          .map((s) => s is SubredditScoreModel
-              ? s.toJson()
-              : SubredditScoreModel(
-                  subreddit: s.subreddit,
-                  activityScore: s.activityScore,
-                  subscriberScore: s.subscriberScore,
-                  relevanceScore: s.relevanceScore,
-                  semanticScore: s.semanticScore,
-                  totalScore: s.totalScore,
-                  llmReasoning: s.llmReasoning,
-                ).toJson())
+          .map(
+            (s) => s is SubredditScoreModel
+                ? s.toJson()
+                : SubredditScoreModel(
+                    subreddit: s.subreddit,
+                    activityScore: s.activityScore,
+                    subscriberScore: s.subscriberScore,
+                    relevanceScore: s.relevanceScore,
+                    semanticScore: s.semanticScore,
+                    totalScore: s.totalScore,
+                    llmReasoning: s.llmReasoning,
+                  ).toJson(),
+          )
           .toList(),
       'selectedSubredditName': selectedSubredditName,
       'memoryContent': memoryContent,

@@ -33,10 +33,12 @@ import 'package:goodreddit/features/search/data/repositories/subreddit_repositor
 import 'package:goodreddit/features/search/domain/repositories/subreddit_repository.dart';
 import 'package:goodreddit/features/search/domain/usecases/search_and_rank_subreddits.dart';
 import 'package:goodreddit/features/search/presentation/bloc/search_cubit.dart';
+import 'package:goodreddit/features/settings/data/datasources/model_catalog_datasource.dart';
 import 'package:goodreddit/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:goodreddit/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:goodreddit/features/settings/domain/repositories/settings_repository.dart';
 import 'package:goodreddit/features/settings/domain/usecases/get_config.dart';
+import 'package:goodreddit/features/settings/domain/usecases/list_models.dart';
 import 'package:goodreddit/features/settings/domain/usecases/save_config.dart';
 import 'package:goodreddit/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:goodreddit/features/update/data/datasources/github_release_datasource.dart';
@@ -67,43 +69,66 @@ Future<void> initDependencies() async {
   // ---- Datasources ----
   sl
     ..registerLazySingleton<RedditAuthDataSource>(
-        () => RedditAuthDataSourceImpl(webClient: sl()))
+      () => RedditAuthDataSourceImpl(webClient: sl()),
+    )
     ..registerLazySingleton<RedditSearchDataSource>(
-        () => RedditSearchDataSourceImpl(webClient: sl()))
+      () => RedditSearchDataSourceImpl(webClient: sl()),
+    )
     ..registerLazySingleton<RedditScraperDataSource>(
-        () => RedditScraperDataSourceImpl(webClient: sl()))
+      () => RedditScraperDataSourceImpl(webClient: sl()),
+    )
     ..registerLazySingleton<LlmRankingDataSource>(
-        () => LlmRankingDataSourceImpl(dio: sl()))
+      () => LlmRankingDataSourceImpl(dio: sl()),
+    )
     ..registerLazySingleton<LlmGeneratorDataSource>(
-        () => LlmGeneratorDataSourceImpl(dio: sl()))
+      () => LlmGeneratorDataSourceImpl(dio: sl()),
+    )
     ..registerLazySingleton<SettingsLocalDataSource>(
-        () => SettingsLocalDataSourceImpl(secureStorage: sl()))
+      () => SettingsLocalDataSourceImpl(secureStorage: sl()),
+    )
+    ..registerLazySingleton<ModelCatalogDataSource>(
+      () => ModelCatalogDataSourceImpl(dio: sl()),
+    )
     ..registerLazySingleton<SessionLocalDataSource>(
-        () => SessionLocalDataSourceImpl(box: sl()))
+      () => SessionLocalDataSourceImpl(box: sl()),
+    )
     ..registerLazySingleton<GithubReleaseDataSource>(
-        () => GithubReleaseDataSourceImpl(dio: sl()));
+      () => GithubReleaseDataSourceImpl(dio: sl()),
+    );
 
   // ---- Repositories ----
   sl
     ..registerLazySingleton<AuthRepository>(
-        () => AuthRepositoryImpl(dataSource: sl()))
-    ..registerLazySingleton<SubredditRepository>(() => SubredditRepositoryImpl(
-          searchDataSource: sl(),
-          llmRankingDataSource: sl(),
-          settingsDataSource: sl(),
-        ))
+      () => AuthRepositoryImpl(dataSource: sl()),
+    )
+    ..registerLazySingleton<SubredditRepository>(
+      () => SubredditRepositoryImpl(
+        searchDataSource: sl(),
+        llmRankingDataSource: sl(),
+        settingsDataSource: sl(),
+      ),
+    )
     ..registerLazySingleton<ScraperRepository>(
-        () => ScraperRepositoryImpl(dataSource: sl()))
-    ..registerLazySingleton<GeneratorRepository>(() => GeneratorRepositoryImpl(
-          llmDataSource: sl(),
-          settingsDataSource: sl(),
-        ))
+      () => ScraperRepositoryImpl(dataSource: sl()),
+    )
+    ..registerLazySingleton<GeneratorRepository>(
+      () => GeneratorRepositoryImpl(
+        llmDataSource: sl(),
+        settingsDataSource: sl(),
+      ),
+    )
     ..registerLazySingleton<SettingsRepository>(
-        () => SettingsRepositoryImpl(dataSource: sl()))
+      () => SettingsRepositoryImpl(
+        dataSource: sl(),
+        modelCatalogDataSource: sl(),
+      ),
+    )
     ..registerLazySingleton<HistoryRepository>(
-        () => HistoryRepositoryImpl(dataSource: sl()))
+      () => HistoryRepositoryImpl(dataSource: sl()),
+    )
     ..registerLazySingleton<UpdateRepository>(
-        () => UpdateRepositoryImpl(dataSource: sl()));
+      () => UpdateRepositoryImpl(dataSource: sl()),
+    );
 
   // ---- Use cases ----
   sl
@@ -115,6 +140,7 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => GenerateSkillFile(sl()))
     ..registerLazySingleton(() => GetConfig(sl()))
     ..registerLazySingleton(() => SaveConfig(sl()))
+    ..registerLazySingleton(() => ListModels(sl()))
     ..registerLazySingleton(() => GetAllSessions(sl()))
     ..registerLazySingleton(() => SaveSession(sl()))
     ..registerLazySingleton(() => DeleteSession(sl()))
@@ -124,13 +150,22 @@ Future<void> initDependencies() async {
   sl
     ..registerLazySingleton(() => AuthCubit(getAuthStatus: sl(), logout: sl()))
     ..registerLazySingleton(() => UpdateCubit(checkForUpdate: sl()))
-    ..registerFactory(() => SearchCubit(searchAndRank: sl(), saveSession: sl()))
+    ..registerFactory(
+      () =>
+          SearchCubit(searchAndRank: sl(), saveSession: sl(), getConfig: sl()),
+    )
     ..registerFactory(() => ScraperCubit(scrapeContent: sl()))
-    ..registerFactory(() => GeneratorCubit(
-          generateMemory: sl(),
-          generateSkill: sl(),
-          fileExporter: sl(),
-        ))
-    ..registerFactory(() => SettingsCubit(getConfig: sl(), saveConfig: sl()))
-    ..registerFactory(() => HistoryCubit(getAllSessions: sl(), deleteSession: sl()));
+    ..registerFactory(
+      () => GeneratorCubit(
+        generateMemory: sl(),
+        generateSkill: sl(),
+        fileExporter: sl(),
+      ),
+    )
+    ..registerFactory(
+      () => SettingsCubit(getConfig: sl(), saveConfig: sl(), listModels: sl()),
+    )
+    ..registerFactory(
+      () => HistoryCubit(getAllSessions: sl(), deleteSession: sl()),
+    );
 }

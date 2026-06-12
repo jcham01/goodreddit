@@ -36,6 +36,11 @@ class GeneratorState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, kind, memoryContent, skillContent, errorMessage];
+  List<Object?> get props => [
+    status,
+    kind,
+    memoryContent,
+    skillContent,
+    errorMessage,
+  ];
 }

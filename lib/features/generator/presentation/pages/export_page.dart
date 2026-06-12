@@ -1,9 +1,16 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:goodreddit/core/error/failures.dart';
+import 'package:goodreddit/core/usecases/usecase.dart';
+import 'package:goodreddit/core/widgets/model_badge.dart';
 import 'package:goodreddit/features/generator/presentation/bloc/generator_cubit.dart';
 import 'package:goodreddit/features/scraper/domain/entities/comment.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 import 'package:goodreddit/features/search/domain/entities/subreddit.dart';
+import 'package:goodreddit/features/settings/domain/entities/agent_config.dart';
+import 'package:goodreddit/features/settings/domain/usecases/get_config.dart';
 
 class ExportPage extends StatelessWidget {
   final Subreddit subreddit;
@@ -39,6 +46,22 @@ class ExportPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
+              FutureBuilder<Either<Failure, AgentConfig>>(
+                future: GetIt.I<GetConfig>()(const NoParams()),
+                builder: (context, snapshot) {
+                  final config = snapshot.data?.fold((_) => null, (c) => c);
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: ModelBadge(
+                      model: (config?.isConfigured ?? false)
+                          ? config!.effectiveModel
+                          : null,
+                      prefix: 'Generates with',
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 12,
                 children: [
@@ -46,10 +69,10 @@ class ExportPage extends StatelessWidget {
                     onPressed: state.status == GeneratorStatus.generating
                         ? null
                         : () => cubit.runMemory(
-                              subreddit: subreddit,
-                              posts: posts,
-                              comments: comments,
-                            ),
+                            subreddit: subreddit,
+                            posts: posts,
+                            comments: comments,
+                          ),
                     icon: const Icon(Icons.psychology_outlined),
                     label: const Text('MEMORY.md'),
                   ),
@@ -57,10 +80,10 @@ class ExportPage extends StatelessWidget {
                     onPressed: state.status == GeneratorStatus.generating
                         ? null
                         : () => cubit.runSkill(
-                              subreddit: subreddit,
-                              posts: posts,
-                              comments: comments,
-                            ),
+                            subreddit: subreddit,
+                            posts: posts,
+                            comments: comments,
+                          ),
                     icon: const Icon(Icons.handyman_outlined),
                     label: const Text('SKILL.md'),
                   ),
@@ -102,7 +125,8 @@ class ExportPage extends StatelessWidget {
                     label: const Text('Posts JSON'),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => cubit.exportPostsCsv(subreddit.name, posts),
+                    onPressed: () =>
+                        cubit.exportPostsCsv(subreddit.name, posts),
                     icon: const Icon(Icons.table_chart_outlined),
                     label: const Text('Posts CSV'),
                   ),
@@ -144,13 +168,9 @@ class _GeneratedBlock extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(title,
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: onShare,
-                ),
+                IconButton(icon: const Icon(Icons.share), onPressed: onShare),
               ],
             ),
             SelectableText(

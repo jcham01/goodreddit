@@ -6,15 +6,9 @@ class UpdateState extends Equatable {
   final UpdateStatus status;
   final AppUpdate? update;
 
-  const UpdateState({
-    this.status = UpdateStatus.initial,
-    this.update,
-  });
+  const UpdateState({this.status = UpdateStatus.initial, this.update});
 
-  UpdateState copyWith({
-    UpdateStatus? status,
-    AppUpdate? update,
-  }) {
+  UpdateState copyWith({UpdateStatus? status, AppUpdate? update}) {
     return UpdateState(
       status: status ?? this.status,
       update: update ?? this.update,

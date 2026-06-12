@@ -12,8 +12,7 @@ class ApiConstants {
   static const String redditLoginUrl = '$redditOrigin/login';
 
   static const String subredditSearchPath = '/subreddits/search.json';
-  static String subredditTopPath(String subreddit) =>
-      '/r/$subreddit/top.json';
+  static String subredditTopPath(String subreddit) => '/r/$subreddit/top.json';
   static String postCommentsPath(String subreddit, String postId) =>
       '/r/$subreddit/comments/$postId.json';
 
@@ -37,6 +36,38 @@ class ApiConstants {
   static const String googleApiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
   static const String googleDefaultModel = 'gemini-2.5-flash';
+
+  // Model catalogs — live list endpoints, queried with the user's API key
+  static const String anthropicModelsUrl =
+      'https://api.anthropic.com/v1/models';
+  static const String openaiModelsUrl = 'https://api.openai.com/v1/models';
+  // Google reuses [googleApiUrl] (it already is the models collection).
+
+  // Static fallbacks shown when no API key is set or the live fetch fails
+  // (snapshot 2026-06).
+  static const List<String> claudeFallbackModels = [
+    'claude-opus-4-8',
+    'claude-fable-5',
+    'claude-opus-4-7',
+    'claude-opus-4-6',
+    'claude-sonnet-4-6',
+    'claude-haiku-4-5',
+  ];
+  static const List<String> openaiFallbackModels = [
+    'gpt-5.1',
+    'gpt-5',
+    'gpt-5-mini',
+    'gpt-5-nano',
+    'gpt-4.1',
+    'gpt-4o',
+    'gpt-4o-mini',
+  ];
+  static const List<String> googleFallbackModels = [
+    'gemini-3-pro-preview',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+  ];
 
   // App updates — latest GitHub release (the repo must stay public for the
   // unauthenticated releases API to work)

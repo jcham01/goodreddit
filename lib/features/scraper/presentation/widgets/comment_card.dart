@@ -20,8 +20,9 @@ class CommentCard extends StatelessWidget {
               children: [
                 Text(
                   'u/${comment.author}',
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 const Icon(Icons.arrow_upward, size: 13),

@@ -26,7 +26,8 @@ class SubredditModel extends Subreddit {
       url: data['url'] ?? '',
       createdAt: data['created_utc'] != null
           ? DateTime.fromMillisecondsSinceEpoch(
-              (data['created_utc'] as num).toInt() * 1000)
+              (data['created_utc'] as num).toInt() * 1000,
+            )
           : null,
       isNsfw: data['over18'] ?? false,
     );

@@ -22,7 +22,8 @@ class SubredditRepositoryImpl implements SubredditRepository {
 
   @override
   Future<Either<Failure, List<SubredditScore>>> searchAndRank(
-      String query) async {
+    String query,
+  ) async {
     try {
       final subreddits = await searchDataSource.searchSubreddits(query);
       if (subreddits.isEmpty) {
@@ -41,8 +42,7 @@ class SubredditRepositoryImpl implements SubredditRepository {
           semanticScore: ranking?.score ?? 0.0,
           llmReasoning: ranking?.reasoning,
         );
-      }).toList()
-        ..sort((a, b) => b.totalScore.compareTo(a.totalScore));
+      }).toList()..sort((a, b) => b.totalScore.compareTo(a.totalScore));
 
       return Right(scored);
     } on NotAuthenticatedException catch (e) {
@@ -65,13 +65,15 @@ class SubredditRepositoryImpl implements SubredditRepository {
       if (!config.isConfigured) return const {};
 
       final payload = subreddits
-          .map((s) => {
-                'name': s.name,
-                'title': s.title,
-                'subscribers': s.subscribers,
-                'active_users': s.activeUsers,
-                'description': s.description,
-              })
+          .map(
+            (s) => {
+              'name': s.name,
+              'title': s.title,
+              'subscribers': s.subscribers,
+              'active_users': s.activeUsers,
+              'description': s.description,
+            },
+          )
           .toList();
 
       final response = await llmRankingDataSource.rankSubreddits(

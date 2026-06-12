@@ -18,9 +18,7 @@ class GithubReleaseDataSourceImpl implements GithubReleaseDataSource {
     try {
       final response = await dio.get<Map<String, dynamic>>(
         ApiConstants.latestReleaseUrl,
-        options: Options(
-          headers: {'Accept': 'application/vnd.github+json'},
-        ),
+        options: Options(headers: {'Accept': 'application/vnd.github+json'}),
       );
       final data = response.data;
       if (data == null) {

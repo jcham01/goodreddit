@@ -25,14 +25,14 @@ class Subreddit extends Equatable {
 
   @override
   List<Object?> get props => [
-        name,
-        displayName,
-        title,
-        description,
-        subscribers,
-        activeUsers,
-        url,
-        createdAt,
-        isNsfw,
-      ];
+    name,
+    displayName,
+    title,
+    description,
+    subscribers,
+    activeUsers,
+    url,
+    createdAt,
+    isNsfw,
+  ];
 }

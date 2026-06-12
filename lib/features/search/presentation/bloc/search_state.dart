@@ -6,6 +6,10 @@ class SearchState extends Equatable {
   final SearchStatus status;
   final String query;
   final List<SubredditScore> results;
+
+  /// Model id used for the LLM ranking of [results]; null when no LLM is
+  /// configured (heuristic ranking only).
+  final String? modelUsed;
   final String? errorMessage;
   final bool needsAuth;
 
@@ -13,6 +17,7 @@ class SearchState extends Equatable {
     this.status = SearchStatus.initial,
     this.query = '',
     this.results = const [],
+    this.modelUsed,
     this.errorMessage,
     this.needsAuth = false,
   });
@@ -21,6 +26,7 @@ class SearchState extends Equatable {
     SearchStatus? status,
     String? query,
     List<SubredditScore>? results,
+    String? modelUsed,
     String? errorMessage,
     bool? needsAuth,
   }) {
@@ -28,11 +34,19 @@ class SearchState extends Equatable {
       status: status ?? this.status,
       query: query ?? this.query,
       results: results ?? this.results,
+      modelUsed: modelUsed ?? this.modelUsed,
       errorMessage: errorMessage,
       needsAuth: needsAuth ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [status, query, results, errorMessage, needsAuth];
+  List<Object?> get props => [
+    status,
+    query,
+    results,
+    modelUsed,
+    errorMessage,
+    needsAuth,
+  ];
 }

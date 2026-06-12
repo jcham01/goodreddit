@@ -8,16 +8,12 @@ class AgentConfig extends Equatable {
   final String apiKey;
   final String? model;
 
-  const AgentConfig({
-    required this.provider,
-    required this.apiKey,
-    this.model,
-  });
+  const AgentConfig({required this.provider, required this.apiKey, this.model});
 
   const AgentConfig.empty()
-      : provider = LlmProvider.claude,
-        apiKey = '',
-        model = null;
+    : provider = LlmProvider.claude,
+      apiKey = '',
+      model = null;
 
   bool get isConfigured => apiKey.isNotEmpty;
 
@@ -33,11 +29,7 @@ class AgentConfig extends Equatable {
     }
   }
 
-  AgentConfig copyWith({
-    LlmProvider? provider,
-    String? apiKey,
-    String? model,
-  }) {
+  AgentConfig copyWith({LlmProvider? provider, String? apiKey, String? model}) {
     return AgentConfig(
       provider: provider ?? this.provider,
       apiKey: apiKey ?? this.apiKey,

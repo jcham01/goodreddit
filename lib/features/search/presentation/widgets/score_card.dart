@@ -28,8 +28,9 @@ class ScoreCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       sub.displayName,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   _ScoreBadge(pct: pct),
@@ -44,8 +45,14 @@ class ScoreCard extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 4,
                 children: [
-                  _Stat(icon: Icons.people_outline, label: _compact(sub.subscribers)),
-                  _Stat(icon: Icons.bolt_outlined, label: '${_compact(sub.activeUsers)} active'),
+                  _Stat(
+                    icon: Icons.people_outline,
+                    label: _compact(sub.subscribers),
+                  ),
+                  _Stat(
+                    icon: Icons.bolt_outlined,
+                    label: '${_compact(sub.activeUsers)} active',
+                  ),
                 ],
               ),
               if (score.llmReasoning != null &&

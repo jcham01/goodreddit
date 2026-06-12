@@ -10,25 +10,24 @@ class AuthCubit extends Cubit<AuthState> {
   final GetAuthStatus getAuthStatus;
   final Logout logout;
 
-  AuthCubit({
-    required this.getAuthStatus,
-    required this.logout,
-  }) : super(const AuthState());
+  AuthCubit({required this.getAuthStatus, required this.logout})
+    : super(const AuthState());
 
   Future<void> refresh() async {
     emit(state.copyWith(status: AuthStatus.checking));
     final result = await getAuthStatus(const NoParams());
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      )),
-      (session) => emit(AuthState(
-        status: session.isAuthenticated
-            ? AuthStatus.authenticated
-            : AuthStatus.anonymous,
-        username: session.username,
-      )),
+      (failure) => emit(
+        state.copyWith(status: AuthStatus.error, errorMessage: failure.message),
+      ),
+      (session) => emit(
+        AuthState(
+          status: session.isAuthenticated
+              ? AuthStatus.authenticated
+              : AuthStatus.anonymous,
+          username: session.username,
+        ),
+      ),
     );
   }
 

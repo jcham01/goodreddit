@@ -27,7 +27,9 @@ class RedditSearchDataSourceImpl implements RedditSearchDataSource {
     try {
       final children = (data['data']?['children'] as List?) ?? const [];
       return children
-          .map((child) => SubredditModel.fromJson(child as Map<String, dynamic>))
+          .map(
+            (child) => SubredditModel.fromJson(child as Map<String, dynamic>),
+          )
           .where((sub) => !sub.isNsfw)
           .toList();
     } catch (e) {

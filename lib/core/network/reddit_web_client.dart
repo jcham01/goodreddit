@@ -42,7 +42,8 @@ class RedditWebClient {
       ),
       initialSettings: InAppWebViewSettings(
         // A real Chrome-on-Android UA, matching what the engine actually is.
-        userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) '
+        userAgent:
+            'Mozilla/5.0 (Linux; Android 14; Pixel 8) '
             'AppleWebKit/537.36 (KHTML, like Gecko) '
             'Chrome/126.0.0.0 Mobile Safari/537.36',
         javaScriptEnabled: true,
@@ -80,10 +81,7 @@ class RedditWebClient {
   ///
   /// [path] is relative to [ApiConstants.redditOrigin] (e.g.
   /// `/subreddits/search.json`).
-  Future<dynamic> getJson(
-    String path, {
-    Map<String, dynamic>? query,
-  }) async {
+  Future<dynamic> getJson(String path, {Map<String, dynamic>? query}) async {
     await ensureReady();
     final controller = _controller;
     if (controller == null) {
@@ -120,7 +118,9 @@ class RedditWebClient {
     final status = (value['status'] as num).toInt();
     final body = value['body'] as String? ?? '';
 
-    debugPrint('[GoodReddit/web] GET $path → HTTP $status (${body.length} bytes)');
+    debugPrint(
+      '[GoodReddit/web] GET $path → HTTP $status (${body.length} bytes)',
+    );
 
     if (status == 401 || status == 403) {
       // 403 here usually means the session expired, not a TLS block (we are the
@@ -145,8 +145,10 @@ class RedditWebClient {
     final buffer = StringBuffer(ApiConstants.redditOrigin)..write(path);
     if (query != null && query.isNotEmpty) {
       final qs = query.entries
-          .map((e) =>
-              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent('${e.value}')}')
+          .map(
+            (e) =>
+                '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent('${e.value}')}',
+          )
           .join('&');
       buffer
         ..write('?')

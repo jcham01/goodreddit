@@ -15,8 +15,7 @@ class DataExportHelper {
   }
 
   static String commentsToJson(List<Comment> comments) {
-    final data =
-        comments.map(_commentToModel).map((c) => c.toJson()).toList();
+    final data = comments.map(_commentToModel).map((c) => c.toJson()).toList();
     return const JsonEncoder.withIndent('  ').convert(data);
   }
 
@@ -24,16 +23,18 @@ class DataExportHelper {
     final buffer = StringBuffer()
       ..writeln('id,title,author,score,num_comments,flair,created_at,url');
     for (final p in posts) {
-      buffer.writeln([
-        _esc(p.id),
-        _esc(p.title),
-        _esc(p.author),
-        p.score,
-        p.numComments,
-        _esc(p.flair ?? ''),
-        p.createdAt.toIso8601String(),
-        _esc(p.url),
-      ].join(','));
+      buffer.writeln(
+        [
+          _esc(p.id),
+          _esc(p.title),
+          _esc(p.author),
+          p.score,
+          p.numComments,
+          _esc(p.flair ?? ''),
+          p.createdAt.toIso8601String(),
+          _esc(p.url),
+        ].join(','),
+      );
     }
     return buffer.toString();
   }
@@ -42,15 +43,17 @@ class DataExportHelper {
     final buffer = StringBuffer()
       ..writeln('id,post_id,author,score,depth,created_at,body');
     for (final c in comments) {
-      buffer.writeln([
-        _esc(c.id),
-        _esc(c.postId),
-        _esc(c.author),
-        c.score,
-        c.depth,
-        c.createdAt.toIso8601String(),
-        _esc(c.body),
-      ].join(','));
+      buffer.writeln(
+        [
+          _esc(c.id),
+          _esc(c.postId),
+          _esc(c.author),
+          c.score,
+          c.depth,
+          c.createdAt.toIso8601String(),
+          _esc(c.body),
+        ].join(','),
+      );
     }
     return buffer.toString();
   }

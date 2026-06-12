@@ -7,14 +7,9 @@ class RedditSession extends Equatable {
   /// Username, when it can be resolved from the logged-in session.
   final String? username;
 
-  const RedditSession({
-    required this.isAuthenticated,
-    this.username,
-  });
+  const RedditSession({required this.isAuthenticated, this.username});
 
-  const RedditSession.anonymous()
-      : isAuthenticated = false,
-        username = null;
+  const RedditSession.anonymous() : isAuthenticated = false, username = null;
 
   @override
   List<Object?> get props => [isAuthenticated, username];

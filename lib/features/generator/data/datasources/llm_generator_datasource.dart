@@ -44,14 +44,16 @@ class LlmGeneratorDataSourceImpl implements LlmGeneratorDataSource {
         'model': config.effectiveModel,
         'max_tokens': 4096,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
       },
-      options: Options(headers: {
-        'x-api-key': config.apiKey,
-        'anthropic-version': ApiConstants.claudeApiVersion,
-        'content-type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'x-api-key': config.apiKey,
+          'anthropic-version': ApiConstants.claudeApiVersion,
+          'content-type': 'application/json',
+        },
+      ),
     );
     return response.data['content'][0]['text'] as String;
   }
@@ -62,14 +64,16 @@ class LlmGeneratorDataSourceImpl implements LlmGeneratorDataSource {
       data: {
         'model': config.effectiveModel,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
         'temperature': 0.7,
       },
-      options: Options(headers: {
-        'Authorization': 'Bearer ${config.apiKey}',
-        'Content-Type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${config.apiKey}',
+          'Content-Type': 'application/json',
+        },
+      ),
     );
     return response.data['choices'][0]['message']['content'] as String;
   }
@@ -83,9 +87,9 @@ class LlmGeneratorDataSourceImpl implements LlmGeneratorDataSource {
         'contents': [
           {
             'parts': [
-              {'text': prompt}
-            ]
-          }
+              {'text': prompt},
+            ],
+          },
         ],
         'generationConfig': {'temperature': 0.7},
       },

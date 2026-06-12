@@ -16,16 +16,20 @@ class ScraperCubit extends Cubit<ScraperState> {
     emit(state.copyWith(status: ScraperStatus.loading));
     final result = await scrapeContent(ScrapeParams(subredditName));
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ScraperStatus.error,
-        errorMessage: failure.message,
-        needsAuth: failure is NotAuthenticatedFailure,
-      )),
-      (content) => emit(state.copyWith(
-        status: ScraperStatus.loaded,
-        posts: content.posts,
-        comments: content.comments,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: ScraperStatus.error,
+          errorMessage: failure.message,
+          needsAuth: failure is NotAuthenticatedFailure,
+        ),
+      ),
+      (content) => emit(
+        state.copyWith(
+          status: ScraperStatus.loaded,
+          posts: content.posts,
+          comments: content.comments,
+        ),
+      ),
     );
   }
 }

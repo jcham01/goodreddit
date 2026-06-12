@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:goodreddit/core/constants/api_constants.dart';
 import 'package:goodreddit/features/settings/domain/entities/agent_config.dart';
 import 'package:goodreddit/features/settings/presentation/bloc/settings_cubit.dart';
 
@@ -25,15 +26,14 @@ class _SettingsForm extends StatefulWidget {
 
 class _SettingsFormState extends State<_SettingsForm> {
   final _apiKeyController = TextEditingController();
-  final _modelController = TextEditingController();
   LlmProvider _provider = LlmProvider.claude;
+  String? _model;
   bool _obscure = true;
   bool _initialised = false;
 
   @override
   void dispose() {
     _apiKeyController.dispose();
-    _modelController.dispose();
     super.dispose();
   }
 
@@ -42,17 +42,32 @@ class _SettingsFormState extends State<_SettingsForm> {
     _initialised = true;
     _provider = config.provider;
     _apiKeyController.text = config.apiKey;
-    _modelController.text = config.model ?? '';
+    _model = (config.model?.isEmpty ?? true) ? null : config.model;
+  }
+
+  void _reloadModels() {
+    context.read<SettingsCubit>().loadModels(_provider, _apiKeyController.text);
   }
 
   void _save() {
-    context.read<SettingsCubit>().save(AgentConfig(
-          provider: _provider,
-          apiKey: _apiKeyController.text.trim(),
-          model: _modelController.text.trim().isEmpty
-              ? null
-              : _modelController.text.trim(),
-        ));
+    context.read<SettingsCubit>().save(
+      AgentConfig(
+        provider: _provider,
+        apiKey: _apiKeyController.text.trim(),
+        model: _model,
+      ),
+    );
+  }
+
+  static String _defaultModelFor(LlmProvider provider) {
+    switch (provider) {
+      case LlmProvider.claude:
+        return ApiConstants.claudeDefaultModel;
+      case LlmProvider.openai:
+        return ApiConstants.openaiDefaultModel;
+      case LlmProvider.google:
+        return ApiConstants.googleDefaultModel;
+    }
   }
 
   @override
@@ -63,9 +78,9 @@ class _SettingsFormState extends State<_SettingsForm> {
         listener: (context, state) {
           if (state.status == SettingsStatus.loaded) _hydrate(state.config);
           if (state.status == SettingsStatus.saved) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Settings saved')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Settings saved')));
           }
           if (state.status == SettingsStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -78,6 +93,12 @@ class _SettingsFormState extends State<_SettingsForm> {
               state.status == SettingsStatus.initial) {
             return const Center(child: CircularProgressIndicator());
           }
+          // The dropdown must always contain its current value, even when the
+          // saved model is missing from the fetched catalog.
+          final modelItems = [
+            ...state.models,
+            if (_model != null && !state.models.contains(_model)) _model!,
+          ];
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -92,12 +113,27 @@ class _SettingsFormState extends State<_SettingsForm> {
               const SizedBox(height: 8),
               SegmentedButton<LlmProvider>(
                 segments: const [
-                  ButtonSegment(value: LlmProvider.claude, label: Text('Claude')),
-                  ButtonSegment(value: LlmProvider.openai, label: Text('OpenAI')),
-                  ButtonSegment(value: LlmProvider.google, label: Text('Gemini')),
+                  ButtonSegment(
+                    value: LlmProvider.claude,
+                    label: Text('Claude'),
+                  ),
+                  ButtonSegment(
+                    value: LlmProvider.openai,
+                    label: Text('OpenAI'),
+                  ),
+                  ButtonSegment(
+                    value: LlmProvider.google,
+                    label: Text('Gemini'),
+                  ),
                 ],
                 selected: {_provider},
-                onSelectionChanged: (s) => setState(() => _provider = s.first),
+                onSelectionChanged: (s) {
+                  setState(() {
+                    _provider = s.first;
+                    _model = null;
+                  });
+                  _reloadModels();
+                },
               ),
               const SizedBox(height: 20),
               TextField(
@@ -107,24 +143,53 @@ class _SettingsFormState extends State<_SettingsForm> {
                   labelText: 'API key',
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                    icon: Icon(
+                      _obscure ? Icons.visibility : Icons.visibility_off,
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
+                onSubmitted: (_) => _reloadModels(),
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _modelController,
-                decoration: const InputDecoration(
-                  labelText: 'Model (optional)',
-                  helperText: 'Leave empty to use the provider default',
-                  border: OutlineInputBorder(),
+              DropdownButtonFormField<String?>(
+                key: ValueKey('$_provider-${modelItems.length}'),
+                initialValue: _model,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: 'Model',
+                  helperText: state.modelsLoading
+                      ? 'Refreshing model list…'
+                      : _apiKeyController.text.trim().isEmpty
+                      ? 'Static catalog — set an API key and refresh for '
+                            'the live list'
+                      : 'Live list from the provider',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    tooltip: 'Refresh model list',
+                    icon: state.modelsLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh),
+                    onPressed: state.modelsLoading ? null : _reloadModels,
+                  ),
                 ),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Default (${_defaultModelFor(_provider)})'),
+                  ),
+                  for (final m in modelItems)
+                    DropdownMenuItem<String?>(value: m, child: Text(m)),
+                ],
+                onChanged: (value) => setState(() => _model = value),
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed:
-                    state.status == SettingsStatus.saving ? null : _save,
+                onPressed: state.status == SettingsStatus.saving ? null : _save,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),

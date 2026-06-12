@@ -45,11 +45,15 @@ class LlmRankingDataSourceImpl implements LlmRankingDataSource {
   }
 
   String _buildRankingPrompt(
-      List<Map<String, dynamic>> subreddits, String query) {
-    final subList = subreddits.map((s) {
-      return '- r/${s['name']}: "${s['title']}" (${s['subscribers']} subscribers, '
-          '${s['active_users']} active). Description: ${s['description']}';
-    }).join('\n');
+    List<Map<String, dynamic>> subreddits,
+    String query,
+  ) {
+    final subList = subreddits
+        .map((s) {
+          return '- r/${s['name']}: "${s['title']}" (${s['subscribers']} subscribers, '
+              '${s['active_users']} active). Description: ${s['description']}';
+        })
+        .join('\n');
 
     return '''You are an expert at evaluating subreddit relevance.
 Given the search query "$query", rank these subreddits by semantic relevance.
@@ -69,49 +73,58 @@ Only output the JSON, no other text.''';
   }
 
   Future<Map<String, dynamic>> _callClaude(
-      String prompt, AgentConfig config) async {
+    String prompt,
+    AgentConfig config,
+  ) async {
     final response = await dio.post(
       ApiConstants.claudeApiUrl,
       data: {
         'model': config.effectiveModel,
         'max_tokens': 1024,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
       },
-      options: Options(headers: {
-        'x-api-key': config.apiKey,
-        'anthropic-version': ApiConstants.claudeApiVersion,
-        'content-type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'x-api-key': config.apiKey,
+          'anthropic-version': ApiConstants.claudeApiVersion,
+          'content-type': 'application/json',
+        },
+      ),
     );
     final content = response.data['content'][0]['text'] as String;
     return _parseJsonResponse(content);
   }
 
   Future<Map<String, dynamic>> _callOpenAI(
-      String prompt, AgentConfig config) async {
+    String prompt,
+    AgentConfig config,
+  ) async {
     final response = await dio.post(
       ApiConstants.openaiApiUrl,
       data: {
         'model': config.effectiveModel,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
         'temperature': 0.3,
       },
-      options: Options(headers: {
-        'Authorization': 'Bearer ${config.apiKey}',
-        'Content-Type': 'application/json',
-      }),
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${config.apiKey}',
+          'Content-Type': 'application/json',
+        },
+      ),
     );
-    final content =
-        response.data['choices'][0]['message']['content'] as String;
+    final content = response.data['choices'][0]['message']['content'] as String;
     return _parseJsonResponse(content);
   }
 
   Future<Map<String, dynamic>> _callGoogle(
-      String prompt, AgentConfig config) async {
+    String prompt,
+    AgentConfig config,
+  ) async {
     final url =
         '${ApiConstants.googleApiUrl}/${config.effectiveModel}:generateContent?key=${config.apiKey}';
     final response = await dio.post(
@@ -120,9 +133,9 @@ Only output the JSON, no other text.''';
         'contents': [
           {
             'parts': [
-              {'text': prompt}
-            ]
-          }
+              {'text': prompt},
+            ],
+          },
         ],
         'generationConfig': {'temperature': 0.3},
       },

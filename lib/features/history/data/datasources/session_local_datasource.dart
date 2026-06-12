@@ -22,11 +22,15 @@ class SessionLocalDataSourceImpl implements SessionLocalDataSource {
   @override
   Future<List<ResearchSessionModel>> getAll() async {
     try {
-      final sessions = box.values
-          .map((raw) => ResearchSessionModel.fromJson(
-              jsonDecode(raw) as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      final sessions =
+          box.values
+              .map(
+                (raw) => ResearchSessionModel.fromJson(
+                  jsonDecode(raw) as Map<String, dynamic>,
+                ),
+              )
+              .toList()
+            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       return sessions;
     } catch (e) {
       throw CacheException('Failed to read sessions: $e');

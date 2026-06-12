@@ -17,9 +17,11 @@ class UpdateCubit extends Cubit<UpdateState> {
     result.fold(
       // A failed check must never get in the user's way at launch.
       (_) => emit(state.copyWith(status: UpdateStatus.upToDate)),
-      (update) => emit(update == null
-          ? state.copyWith(status: UpdateStatus.upToDate)
-          : state.copyWith(status: UpdateStatus.available, update: update)),
+      (update) => emit(
+        update == null
+            ? state.copyWith(status: UpdateStatus.upToDate)
+            : state.copyWith(status: UpdateStatus.available, update: update),
+      ),
     );
   }
 }

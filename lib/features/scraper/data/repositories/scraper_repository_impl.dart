@@ -30,8 +30,10 @@ class ScraperRepositoryImpl implements ScraperRepository {
 
       final comments = <CommentModel>[];
       for (final post in posts.take(_commentedPostCount)) {
-        final postComments =
-            await dataSource.getPostComments(subredditName, post.id);
+        final postComments = await dataSource.getPostComments(
+          subredditName,
+          post.id,
+        );
         comments.addAll(postComments);
         await Future.delayed(_interRequestDelay);
       }

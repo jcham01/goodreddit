@@ -41,8 +41,10 @@ class GeneratorRepositoryImpl implements GeneratorRepository {
       if (!config.isConfigured) {
         return const Left(ConfigFailure('LLM API key not configured'));
       }
-      final content =
-          await llmDataSource.generateContent(prompt: prompt, config: config);
+      final content = await llmDataSource.generateContent(
+        prompt: prompt,
+        config: config,
+      );
       return Right(content);
     } on LlmException catch (e) {
       return Left(LlmFailure(e.message));
@@ -58,18 +60,23 @@ class GeneratorRepositoryImpl implements GeneratorRepository {
     List<Post> posts,
     List<Comment> comments,
   ) {
-    final topPosts = posts.take(10).map((p) {
-      final excerpt = p.selfText.isNotEmpty
-          ? '\n  ${p.selfText.substring(0, p.selfText.length.clamp(0, 200))}...'
-          : '';
-      return '- [${p.score} upvotes] "${p.title}" by u/${p.author}$excerpt';
-    }).join('\n');
+    final topPosts = posts
+        .take(10)
+        .map((p) {
+          final excerpt = p.selfText.isNotEmpty
+              ? '\n  ${p.selfText.substring(0, p.selfText.length.clamp(0, 200))}...'
+              : '';
+          return '- [${p.score} upvotes] "${p.title}" by u/${p.author}$excerpt';
+        })
+        .join('\n');
 
     final topComments = comments
         .where((c) => c.score > 5)
         .take(15)
-        .map((c) =>
-            '- [${c.score}] u/${c.author}: "${c.body.substring(0, c.body.length.clamp(0, 150))}"')
+        .map(
+          (c) =>
+              '- [${c.score}] u/${c.author}: "${c.body.substring(0, c.body.length.clamp(0, 150))}"',
+        )
         .join('\n');
 
     return '''Generate a MEMORY.md file for an AI agent specialized in the subreddit r/${subreddit.name}.
@@ -104,7 +111,10 @@ Format as clean Markdown. Be specific and data-driven based on the content provi
   String _buildSkillPrompt(Subreddit subreddit, List<Post> posts) {
     final topPosts = posts
         .take(10)
-        .map((p) => '- [${p.score} upvotes] "${p.title}" (${p.numComments} comments)')
+        .map(
+          (p) =>
+              '- [${p.score} upvotes] "${p.title}" (${p.numComments} comments)',
+        )
         .join('\n');
 
     return '''Generate a SKILL.md file that configures an AI agent to be a specialist for r/${subreddit.name}.

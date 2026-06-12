@@ -26,18 +26,22 @@ class GeneratorCubit extends Cubit<GeneratorState> {
     required List<Post> posts,
     required List<Comment> comments,
   }) async {
-    emit(state.copyWith(
-        status: GeneratorStatus.generating, kind: GenerationKind.memory));
-    final result = await generateMemory(GenerationParams(
-      subreddit: subreddit,
-      posts: posts,
-      comments: comments,
-    ));
+    emit(
+      state.copyWith(
+        status: GeneratorStatus.generating,
+        kind: GenerationKind.memory,
+      ),
+    );
+    final result = await generateMemory(
+      GenerationParams(subreddit: subreddit, posts: posts, comments: comments),
+    );
     result.fold(
-      (f) => emit(state.copyWith(
-          status: GeneratorStatus.error, errorMessage: f.message)),
-      (content) => emit(state.copyWith(
-          status: GeneratorStatus.done, memoryContent: content)),
+      (f) => emit(
+        state.copyWith(status: GeneratorStatus.error, errorMessage: f.message),
+      ),
+      (content) => emit(
+        state.copyWith(status: GeneratorStatus.done, memoryContent: content),
+      ),
     );
   }
 
@@ -46,18 +50,22 @@ class GeneratorCubit extends Cubit<GeneratorState> {
     required List<Post> posts,
     required List<Comment> comments,
   }) async {
-    emit(state.copyWith(
-        status: GeneratorStatus.generating, kind: GenerationKind.skill));
-    final result = await generateSkill(GenerationParams(
-      subreddit: subreddit,
-      posts: posts,
-      comments: comments,
-    ));
+    emit(
+      state.copyWith(
+        status: GeneratorStatus.generating,
+        kind: GenerationKind.skill,
+      ),
+    );
+    final result = await generateSkill(
+      GenerationParams(subreddit: subreddit, posts: posts, comments: comments),
+    );
     result.fold(
-      (f) => emit(state.copyWith(
-          status: GeneratorStatus.error, errorMessage: f.message)),
-      (content) => emit(state.copyWith(
-          status: GeneratorStatus.done, skillContent: content)),
+      (f) => emit(
+        state.copyWith(status: GeneratorStatus.error, errorMessage: f.message),
+      ),
+      (content) => emit(
+        state.copyWith(status: GeneratorStatus.done, skillContent: content),
+      ),
     );
   }
 

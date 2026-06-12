@@ -23,12 +23,12 @@ class SubredditScore extends Equatable {
 
   @override
   List<Object?> get props => [
-        subreddit,
-        activityScore,
-        subscriberScore,
-        relevanceScore,
-        semanticScore,
-        totalScore,
-        llmReasoning,
-      ];
+    subreddit,
+    activityScore,
+    subscriberScore,
+    relevanceScore,
+    semanticScore,
+    totalScore,
+    llmReasoning,
+  ];
 }

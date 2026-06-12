@@ -11,19 +11,19 @@ class HistoryCubit extends Cubit<HistoryState> {
   final GetAllSessions getAllSessions;
   final DeleteSession deleteSession;
 
-  HistoryCubit({
-    required this.getAllSessions,
-    required this.deleteSession,
-  }) : super(const HistoryState());
+  HistoryCubit({required this.getAllSessions, required this.deleteSession})
+    : super(const HistoryState());
 
   Future<void> load() async {
     emit(state.copyWith(status: HistoryStatus.loading));
     final result = await getAllSessions(const NoParams());
     result.fold(
-      (f) => emit(state.copyWith(
-          status: HistoryStatus.error, errorMessage: f.message)),
+      (f) => emit(
+        state.copyWith(status: HistoryStatus.error, errorMessage: f.message),
+      ),
       (sessions) => emit(
-          state.copyWith(status: HistoryStatus.loaded, sessions: sessions)),
+        state.copyWith(status: HistoryStatus.loaded, sessions: sessions),
+      ),
     );
   }
 

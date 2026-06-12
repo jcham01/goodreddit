@@ -34,7 +34,9 @@ class SubredditScoreModel extends SubredditScore {
     // Subscriber score: normalised log of subscribers (0-1), capped at 10M.
     final subscriberScore = subreddit.subscribers > 0
         ? math.min(
-            1.0, math.log(subreddit.subscribers + 1) / math.log(10000000))
+            1.0,
+            math.log(subreddit.subscribers + 1) / math.log(10000000),
+          )
         : 0.0;
 
     // Keyword relevance: fraction of query words found in name/title/desc.
@@ -42,12 +44,15 @@ class SubredditScoreModel extends SubredditScore {
     final haystack =
         '${subreddit.name} ${subreddit.title} ${subreddit.description}'
             .toLowerCase();
-    final matchCount = queryWords.where((w) => w.isNotEmpty && haystack.contains(w)).length;
+    final matchCount = queryWords
+        .where((w) => w.isNotEmpty && haystack.contains(w))
+        .length;
     final relevanceScore = queryWords.isNotEmpty
         ? math.min(1.0, matchCount / queryWords.length)
         : 0.0;
 
-    final totalScore = (activityScore * 0.2) +
+    final totalScore =
+        (activityScore * 0.2) +
         (subscriberScore * 0.2) +
         (relevanceScore * 0.3) +
         (semanticScore * 0.3);

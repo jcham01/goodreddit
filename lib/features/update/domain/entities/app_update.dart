@@ -11,11 +11,7 @@ class AppUpdate extends Equatable {
   /// Release notes (the release body), if any.
   final String? releaseNotes;
 
-  const AppUpdate({
-    required this.version,
-    this.apkUrl,
-    this.releaseNotes,
-  });
+  const AppUpdate({required this.version, this.apkUrl, this.releaseNotes});
 
   @override
   List<Object?> get props => [version, apkUrl, releaseNotes];
