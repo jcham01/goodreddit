@@ -269,12 +269,12 @@ class _CodexPocPanelState extends State<_CodexPocPanel> {
   Future<void> _refreshUsage() async {
     if (_tokens == null) return;
     setState(() => _usageLoading = true);
-    final usage = await _auth.fetchUsage();
-    if (mounted) {
-      setState(() {
-        if (usage != null) _usage = usage;
-        _usageLoading = false;
-      });
+    try {
+      final usage = await _auth.fetchUsage();
+      if (mounted && usage != null) setState(() => _usage = usage);
+    } finally {
+      // Always clear the spinner, even if the fetch hung/failed.
+      if (mounted) setState(() => _usageLoading = false);
     }
   }
 

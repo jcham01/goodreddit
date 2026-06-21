@@ -97,8 +97,11 @@ class ChatGptWebClient {
       throw const LlmException('ChatGPT web client not initialised');
     }
 
-    final result = await controller.callAsyncJavaScript(
-      functionBody: '''
+    CallAsyncJavaScriptResult? result;
+    try {
+      result = await controller
+          .callAsyncJavaScript(
+            functionBody: '''
         try {
           const resp = await fetch(url, {
             method: "POST",
@@ -114,8 +117,12 @@ class ChatGptWebClient {
           return { status: -1, body: String(e), headers: {} };
         }
       ''',
-      arguments: {'url': url, 'headers': headers, 'body': body},
-    );
+            arguments: {'url': url, 'headers': headers, 'body': body},
+          )
+          .timeout(const Duration(seconds: 90));
+    } on TimeoutException {
+      return (status: -1, body: 'In-page fetch timed out', headers: <String, String>{});
+    }
 
     if (result == null || result.error != null) {
       return (
@@ -148,8 +155,11 @@ class ChatGptWebClient {
       throw const LlmException('ChatGPT web client not initialised');
     }
 
-    final result = await controller.callAsyncJavaScript(
-      functionBody: '''
+    CallAsyncJavaScriptResult? result;
+    try {
+      result = await controller
+          .callAsyncJavaScript(
+            functionBody: '''
         try {
           const resp = await fetch(url, {
             method: "GET",
@@ -162,8 +172,12 @@ class ChatGptWebClient {
           return { status: -1, body: String(e) };
         }
       ''',
-      arguments: {'url': url, 'headers': headers},
-    );
+            arguments: {'url': url, 'headers': headers},
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      return (status: -1, body: 'In-page fetch timed out');
+    }
 
     if (result == null || result.error != null) {
       return (status: -1, body: 'In-page fetch error: ${result?.error ?? 'no result'}');

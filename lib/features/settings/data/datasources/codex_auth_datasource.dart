@@ -361,7 +361,11 @@ class CodexAuthDataSource implements CodexCaller {
           'grant_type': 'refresh_token',
           'refresh_token': current.refreshToken,
         },
-        options: Options(headers: {'Content-Type': 'application/json'}),
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          sendTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
       );
       final merged = current.mergedWithRefresh(resp.data ?? const {});
       await _store(merged);
