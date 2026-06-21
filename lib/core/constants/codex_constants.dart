@@ -6,9 +6,7 @@ import 'package:goodreddit/core/constants/api_constants.dart';
 ///
 /// Source of truth: the public `openai/codex` CLI (verified 2026-06). These are
 /// OpenAI's *first-party* Codex client values; reusing them from a third-party
-/// app is ToS-grey and may break at any time. This is a **feasibility PoC**: its
-/// only job is to answer one question — does Cloudflare let an authenticated
-/// Codex call through from a phone, or 403 it?
+/// app is unofficial (ToS-grey) and may break if OpenAI changes the flow.
 class CodexConstants {
   CodexConstants._();
 

@@ -184,7 +184,7 @@ class CodexRateLimits {
   };
 }
 
-/// The outcome of the feasibility probe — the one-shot diagnostic call.
+/// The outcome of a connection test — a one-shot diagnostic call to Codex.
 class CodexProbeResult {
   final int status;
   final bool ok;
@@ -433,7 +433,7 @@ class CodexAuthDataSource implements CodexCaller {
     return ensureFresh(tokens);
   }
 
-  // ---- The feasibility probe (Settings PoC panel) ----
+  // ---- Connection test (Settings panel) ----
 
   /// Fires ONE Codex Responses call and reports exactly what came back.
   Future<CodexProbeResult> probe(CodexTokens tokens, {String? model}) async {
@@ -469,9 +469,7 @@ class CodexAuthDataSource implements CodexCaller {
         result = CodexProbeResult(
           status: 200,
           ok: true,
-          verdict:
-              '✅ SUCCÈS — Cloudflare a laissé passer. 200 reçu du backend Codex. '
-              'La feature complète est faisable via ce transport.',
+          verdict: '✅ Connexion Codex opérationnelle.',
           text: text.isEmpty ? null : text,
           rawBodySnippet: _snippet(res.body),
           headers: res.headers,

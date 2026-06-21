@@ -169,7 +169,7 @@ class _SettingsFormState extends State<_SettingsForm> {
                   onSubmitted: (_) => _reloadModels(),
                 )
               else
-                const _CodexPocPanel(),
+                const _CodexAccountPanel(),
               const SizedBox(height: 16),
               DropdownButtonFormField<String?>(
                 key: ValueKey('$_provider-${modelItems.length}'),
@@ -178,7 +178,7 @@ class _SettingsFormState extends State<_SettingsForm> {
                 decoration: InputDecoration(
                   labelText: 'Model',
                   helperText: _provider == LlmProvider.openaiCodex
-                      ? 'Liste statique (PoC) — deviendra dynamique une fois l\'accès validé'
+                      ? 'Versions GPT-5.x du compte ChatGPT (repli hors-ligne)'
                       : state.modelsLoading
                       ? 'Refreshing model list…'
                       : _apiKeyController.text.trim().isEmpty
@@ -228,18 +228,16 @@ class _SettingsFormState extends State<_SettingsForm> {
   }
 }
 
-/// Experimental "Sign in with ChatGPT" feasibility PoC. Runs the OAuth flow,
-/// then fires ONE test call to the Codex backend and shows the raw verdict —
-/// the point is to find out whether Cloudflare lets an authenticated call
-/// through from this device before building the full feature.
-class _CodexPocPanel extends StatefulWidget {
-  const _CodexPocPanel();
+/// "Sign in with ChatGPT" account panel for the Codex provider: sign in / out,
+/// connection status, and live usage (5h + weekly windows).
+class _CodexAccountPanel extends StatefulWidget {
+  const _CodexAccountPanel();
 
   @override
-  State<_CodexPocPanel> createState() => _CodexPocPanelState();
+  State<_CodexAccountPanel> createState() => _CodexAccountPanelState();
 }
 
-class _CodexPocPanelState extends State<_CodexPocPanel> {
+class _CodexAccountPanelState extends State<_CodexAccountPanel> {
   final CodexAuthDataSource _auth = GetIt.I<CodexAuthDataSource>();
   CodexTokens? _tokens;
   CodexProbeResult? _result;
@@ -278,10 +276,10 @@ class _CodexPocPanelState extends State<_CodexPocPanel> {
     }
   }
 
-  Future<void> _signInAndProbe() async {
+  Future<void> _signIn() async {
     setState(() {
       _busy = true;
-      _phase = 'Ouverture de la connexion ChatGPT…';
+      _phase = 'Connexion à ChatGPT…';
       _result = null;
     });
     try {
@@ -296,48 +294,41 @@ class _CodexPocPanelState extends State<_CodexPocPanel> {
         ),
       );
       if (tokenJson == null) {
-        if (mounted) setState(() => _busy = false);
+        if (mounted) {
+          setState(() {
+            _busy = false;
+            _phase = null;
+          });
+        }
         return;
       }
       final tokens = await _auth.completeSignIn(tokenJson);
       if (!mounted) return;
-      // Now signed in — refresh the model dropdown (live list, if available).
+      // Refresh the model dropdown (live list, if available).
       context.read<SettingsCubit>().loadModels(LlmProvider.openaiCodex, '');
       setState(() {
         _tokens = tokens;
-        _phase = 'Appel test → /backend-api/codex/responses…';
+        _busy = false;
+        _phase = null;
       });
-      final result = await _auth.probe(tokens);
-      final usage = await _auth.loadUsage();
-      if (mounted) {
-        setState(() {
-          _result = result;
-          if (usage != null) _usage = usage;
-          _busy = false;
-          _phase = null;
-        });
-      }
+      await _refreshUsage(); // free — does not consume quota
     } catch (e) {
       if (mounted) {
         setState(() {
           _busy = false;
           _phase = null;
-          _result = CodexProbeResult(
-            status: -1,
-            ok: false,
-            verdict: '❌ Erreur : $e',
-          );
+          _result = CodexProbeResult(status: -1, ok: false, verdict: '❌ $e');
         });
       }
     }
   }
 
-  Future<void> _probeOnly() async {
+  Future<void> _test() async {
     final tokens = _tokens;
     if (tokens == null) return;
     setState(() {
       _busy = true;
-      _phase = 'Appel test → /backend-api/codex/responses…';
+      _phase = 'Test de la connexion…';
       _result = null;
     });
     final result = await _auth.probe(tokens);
@@ -382,16 +373,16 @@ class _CodexPocPanelState extends State<_CodexPocPanel> {
                   size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('Codex — Connexion ChatGPT (expérimental)',
+                child: Text('Codex — Connexion ChatGPT',
                     style: theme.textTheme.titleSmall),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Utilise ton abonnement ChatGPT (quota du plan, pas une clé API). '
-            'L\'appel passe par le moteur navigateur, comme l\'accès Reddit — '
-            'aucun contournement anti-bot. Pense à « Save » pour activer Codex.',
+            'Connecte-toi avec ton compte ChatGPT pour utiliser Codex (quota de '
+            'ton abonnement, pas de clé API). Sélectionne « Codex » puis « Save » '
+            'pour l\'activer comme fournisseur.',
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
@@ -422,35 +413,32 @@ class _CodexPocPanelState extends State<_CodexPocPanel> {
                 Expanded(child: Text(_phase ?? 'En cours…')),
               ],
             )
+          else if (tokens == null)
+            FilledButton.tonalIcon(
+              onPressed: _signIn,
+              icon: const Icon(Icons.login),
+              label: const Text('Se connecter avec ChatGPT'),
+            )
           else
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton.tonalIcon(
-                  onPressed: _signInAndProbe,
-                  icon: const Icon(Icons.login),
-                  label: Text(tokens == null
-                      ? 'Se connecter + tester'
-                      : 'Reconnecter + tester'),
+                OutlinedButton.icon(
+                  onPressed: _test,
+                  icon: const Icon(Icons.wifi_tethering),
+                  label: const Text('Tester la connexion'),
                 ),
-                if (tokens != null) ...[
-                  OutlinedButton.icon(
-                    onPressed: _probeOnly,
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Relancer le test'),
-                  ),
-                  TextButton.icon(
-                    onPressed: _signOut,
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Déconnexion'),
-                  ),
-                ],
+                TextButton.icon(
+                  onPressed: _signOut,
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Déconnexion'),
+                ),
               ],
             ),
           if (_result != null) ...[
             const SizedBox(height: 12),
-            _ProbeResultCard(result: _result!),
+            _CodexTestResult(result: _result!),
           ],
         ],
       ),
@@ -534,7 +522,7 @@ class _CodexUsageView extends StatelessWidget {
             Text(
               loading
                   ? 'Récupération de l\'usage…'
-                  : 'Usage indisponible. Lance un test ou rafraîchis.',
+                  : 'Usage indisponible — rafraîchis ou lance une recherche.',
               style: theme.textTheme.bodySmall,
             )
           else ...[
@@ -618,9 +606,10 @@ String _formatReset(DateTime dt) {
   return 'le $dd/$mo à $hh:$mm';
 }
 
-class _ProbeResultCard extends StatelessWidget {
+/// Concise connection-test result (full HTTP/headers/body go to the logs).
+class _CodexTestResult extends StatelessWidget {
   final CodexProbeResult result;
-  const _ProbeResultCard({required this.result});
+  const _CodexTestResult({required this.result});
 
   @override
   Widget build(BuildContext context) {
@@ -636,64 +625,29 @@ class _ProbeResultCard extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Verdict (HTTP ${result.status})',
-              style: theme.textTheme.labelLarge?.copyWith(color: color)),
-          const SizedBox(height: 6),
-          Text(result.verdict, style: theme.textTheme.bodyMedium),
-          if (result.text != null && result.text!.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text('Réponse du modèle :', style: theme.textTheme.labelMedium),
-            const SizedBox(height: 4),
-            SelectableText(result.text!, style: theme.textTheme.bodySmall),
-          ],
-          if (result.headers.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text('En-têtes de réponse :', style: theme.textTheme.labelMedium),
-            const SizedBox(height: 4),
-            _MonoBox(
-              text: result.headers.entries
-                  .map((e) => '${e.key}: ${e.value}')
-                  .join('\n'),
-            ),
-          ],
-          if (result.rawBodySnippet.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text('Corps brut (extrait) :', style: theme.textTheme.labelMedium),
-            const SizedBox(height: 4),
-            _MonoBox(text: result.rawBodySnippet),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MonoBox extends StatelessWidget {
-  final String text;
-  const _MonoBox({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxHeight: 180),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: SingleChildScrollView(
-        child: SelectableText(
-          text,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontFamily: 'monospace',
-            fontSize: 11,
+          Icon(
+            result.ok ? Icons.check_circle : Icons.info_outline,
+            size: 18,
+            color: color,
           ),
-        ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(result.verdict, style: theme.textTheme.bodyMedium),
+                if (result.text != null && result.text!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('Réponse : ${result.text}',
+                      style: theme.textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
