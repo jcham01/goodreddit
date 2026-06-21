@@ -71,10 +71,13 @@ class ApiConstants {
     'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
   ];
+  // Offline baseline for Codex (real GPT-5.x versions, dot format). The live
+  // list is derived from the account's ChatGPT model picker; see
+  // [CodexAuthDataSource.listModels].
   static const List<String> openaiCodexFallbackModels = [
     'gpt-5.5',
-    'gpt-5.4-mini',
-    'gpt-5.3-codex-spark',
+    'gpt-5.4',
+    'gpt-5.3',
   ];
 
   // App updates — latest GitHub release (the repo must stay public for the

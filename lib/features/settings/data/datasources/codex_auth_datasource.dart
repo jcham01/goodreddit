@@ -412,9 +412,10 @@ class CodexAuthDataSource implements CodexCaller {
         headers: _authHeaders(fresh),
       );
       _log('listModels ← HTTP ${res.status}');
-      _logBlock('models body', res.body);
       if (res.status != 200) return const [];
-      return _parseModelIds(res.body);
+      final ids = parseCodexModelIds(res.body);
+      _log('listModels parsed: $ids');
+      return ids;
     } catch (e) {
       _log('listModels failed: $e');
       return const [];
@@ -641,39 +642,6 @@ class CodexAuthDataSource implements CodexCaller {
     );
   }
 
-  List<String> _parseModelIds(String raw) {
-    final ids = <String>{};
-    void addFrom(dynamic list) {
-      if (list is! List) return;
-      for (final m in list) {
-        if (m is String) {
-          ids.add(m);
-        } else if (m is Map) {
-          final id = m['slug'] ?? m['id'] ?? m['model'] ?? m['name'];
-          if (id is String) ids.add(id);
-        }
-      }
-    }
-
-    try {
-      final json = jsonDecode(raw);
-      if (json is Map) {
-        addFrom(json['models']);
-        addFrom(json['data']);
-      } else {
-        addFrom(json);
-      }
-    } catch (_) {
-      return const [];
-    }
-
-    // Only codex-named slugs are valid for the codex /responses endpoint; the
-    // curated valid ids (e.g. gpt-5.5) are merged in by the repository.
-    final codexLike =
-        ids.where((id) => id.toLowerCase().contains('codex')).toList()..sort();
-    return codexLike;
-  }
-
   String _diagnose(int status, String body, Map<String, String> headers) {
     final low = body.toLowerCase();
     final h = {for (final e in headers.entries) e.key.toLowerCase(): e.value};
@@ -811,6 +779,47 @@ class CodexAuthDataSource implements CodexCaller {
             '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
       )
       .join('&');
+}
+
+/// Parses the ChatGPT model-picker response (`/backend-api/models`) into codex
+/// model ids. The picker has no codex-named slugs — the codex /responses
+/// endpoint takes the GPT-5.x *versions* in dot form (e.g. `gpt-5.5`, proven
+/// valid by the probe). Prefers the `versions` grouping, falling back to slug
+/// parsing (`gpt-5-5` → `gpt-5.5`). Returns [] on any failure.
+List<String> parseCodexModelIds(String raw) {
+  try {
+    final json = jsonDecode(raw);
+    if (json is! Map) return const [];
+    final ids = <String>{};
+    final version = RegExp(r'^5(\.\d+)?$');
+
+    final versions = json['versions'];
+    if (versions is List) {
+      for (final v in versions) {
+        if (v is Map && v['id'] is String && version.hasMatch(v['id'] as String)) {
+          ids.add('gpt-${v['id']}');
+        }
+      }
+    }
+
+    if (ids.isEmpty && json['models'] is List) {
+      final slug = RegExp(r'^gpt-5(?:-(\d+))?(?:$|-)');
+      for (final m in (json['models'] as List)) {
+        final s = m is Map ? m['slug'] : null;
+        if (s is String) {
+          final match = slug.firstMatch(s);
+          if (match != null) {
+            final minor = match.group(1);
+            ids.add(minor == null ? 'gpt-5' : 'gpt-5.$minor');
+          }
+        }
+      }
+    }
+
+    return ids.toList()..sort();
+  } catch (_) {
+    return const [];
+  }
 }
 
 /// Base64url-decodes a JWT payload and returns its claims (no signature check —
