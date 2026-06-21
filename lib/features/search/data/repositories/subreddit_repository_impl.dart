@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:dartz/dartz.dart';
 import 'package:goodreddit/core/error/exceptions.dart';
 import 'package:goodreddit/core/error/failures.dart';
@@ -5,7 +7,7 @@ import 'package:goodreddit/features/search/data/datasources/llm_ranking_datasour
 import 'package:goodreddit/features/search/data/datasources/reddit_search_datasource.dart';
 import 'package:goodreddit/features/search/data/models/subreddit_model.dart';
 import 'package:goodreddit/features/search/data/models/subreddit_score_model.dart';
-import 'package:goodreddit/features/search/domain/entities/subreddit_score.dart';
+import 'package:goodreddit/features/search/domain/entities/search_ranking_result.dart';
 import 'package:goodreddit/features/search/domain/repositories/subreddit_repository.dart';
 import 'package:goodreddit/features/settings/data/datasources/settings_local_datasource.dart';
 
@@ -21,17 +23,15 @@ class SubredditRepositoryImpl implements SubredditRepository {
   });
 
   @override
-  Future<Either<Failure, List<SubredditScore>>> searchAndRank(
+  Future<Either<Failure, SearchRankingResult>> searchAndRank(
     String query,
   ) async {
     try {
       final subreddits = await searchDataSource.searchSubreddits(query);
       if (subreddits.isEmpty) {
-        return const Right([]);
+        return const Right(SearchRankingResult.empty());
       }
 
-      // Try to enrich with an LLM semantic score; degrade gracefully on failure
-      // so a bad key or rate limit never breaks the base ranking.
       final semantic = await _semanticScores(query, subreddits);
 
       final scored = subreddits.map((sub) {
@@ -44,7 +44,14 @@ class SubredditRepositoryImpl implements SubredditRepository {
         );
       }).toList()..sort((a, b) => b.totalScore.compareTo(a.totalScore));
 
-      return Right(scored);
+      return Right(
+        SearchRankingResult(
+          scores: scored,
+          llmStatus: semantic.status,
+          modelUsed: semantic.modelUsed,
+          llmErrorMessage: semantic.errorMessage,
+        ),
+      );
     } on NotAuthenticatedException catch (e) {
       return Left(NotAuthenticatedFailure(e.message));
     } on RedditException catch (e) {
@@ -56,13 +63,18 @@ class SubredditRepositoryImpl implements SubredditRepository {
     }
   }
 
-  Future<Map<String, _Ranking>> _semanticScores(
+  Future<_SemanticRankings> _semanticScores(
     String query,
     List<SubredditModel> subreddits,
   ) async {
+    String? modelUsed;
+
     try {
       final config = await settingsDataSource.getConfig();
-      if (!config.isConfigured) return const {};
+      if (!config.isConfigured) {
+        return const _SemanticRankings(status: LlmRankingStatus.notConfigured);
+      }
+      modelUsed = config.effectiveModel;
 
       final payload = subreddits
           .map(
@@ -96,11 +108,25 @@ class SubredditRepositoryImpl implements SubredditRepository {
           }
         }
       }
-      return map;
-    } catch (_) {
-      // LLM ranking is an optional enhancement — keep the base ranking.
-      return const {};
+      return _SemanticRankings(
+        status: LlmRankingStatus.applied,
+        rankings: map,
+        modelUsed: modelUsed,
+      );
+    } catch (e) {
+      // LLM ranking is an optional enhancement, but the UI must know when it
+      // fell back to the deterministic heuristic score.
+      return _SemanticRankings(
+        status: LlmRankingStatus.failed,
+        modelUsed: modelUsed,
+        errorMessage: _shortError(e),
+      );
     }
+  }
+
+  String _shortError(Object error) {
+    if (error is LlmException) return error.message;
+    return error.toString();
   }
 }
 
@@ -108,4 +134,17 @@ class _Ranking {
   final double score;
   final String? reasoning;
   const _Ranking({required this.score, this.reasoning});
+}
+
+class _SemanticRankings extends MapView<String, _Ranking> {
+  final LlmRankingStatus status;
+  final String? modelUsed;
+  final String? errorMessage;
+
+  const _SemanticRankings({
+    required this.status,
+    Map<String, _Ranking> rankings = const {},
+    this.modelUsed,
+    this.errorMessage,
+  }) : super(rankings);
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:goodreddit/core/widgets/model_badge.dart';
 import 'package:goodreddit/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:goodreddit/features/auth/presentation/pages/login_page.dart';
 import 'package:goodreddit/features/history/presentation/pages/history_page.dart';
 import 'package:goodreddit/features/scraper/presentation/pages/subreddit_detail_page.dart';
+import 'package:goodreddit/features/search/domain/entities/search_ranking_result.dart';
 import 'package:goodreddit/features/search/domain/entities/subreddit_score.dart';
 import 'package:goodreddit/features/search/presentation/bloc/search_cubit.dart';
+import 'package:goodreddit/features/search/presentation/widgets/ranking_badge.dart';
 import 'package:goodreddit/features/search/presentation/widgets/score_card.dart';
 import 'package:goodreddit/features/settings/presentation/pages/settings_page.dart';
 
@@ -142,9 +143,9 @@ class _SearchPageState extends State<SearchPage> {
                           child: Row(
                             children: [
                               Flexible(
-                                child: ModelBadge(
+                                child: RankingBadge(
+                                  status: state.llmStatus,
                                   model: state.modelUsed,
-                                  prefix: 'Ranked by',
                                 ),
                               ),
                               const Spacer(),
@@ -155,6 +156,23 @@ class _SearchPageState extends State<SearchPage> {
                             ],
                           ),
                         ),
+                        if (state.llmStatus == LlmRankingStatus.failed &&
+                            (state.llmErrorMessage?.isNotEmpty ?? false))
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'LLM fallback: ${state.llmErrorMessage}',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
+                              ),
+                            ),
+                          ),
                         Expanded(
                           child: visible.isEmpty
                               ? const _Centered('No result matches the filter.')

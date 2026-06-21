@@ -1,12 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/error/failures.dart';
-import 'package:goodreddit/core/usecases/usecase.dart';
 import 'package:goodreddit/features/history/domain/entities/research_session.dart';
 import 'package:goodreddit/features/history/domain/usecases/save_session.dart';
+import 'package:goodreddit/features/search/domain/entities/search_ranking_result.dart';
 import 'package:goodreddit/features/search/domain/entities/subreddit_score.dart';
 import 'package:goodreddit/features/search/domain/usecases/search_and_rank_subreddits.dart';
-import 'package:goodreddit/features/settings/domain/usecases/get_config.dart';
 import 'package:uuid/uuid.dart';
 
 part 'search_state.dart';
@@ -14,13 +13,11 @@ part 'search_state.dart';
 class SearchCubit extends Cubit<SearchState> {
   final SearchAndRankSubreddits searchAndRank;
   final SaveSession saveSession;
-  final GetConfig getConfig;
   final Uuid uuid;
 
   SearchCubit({
     required this.searchAndRank,
     required this.saveSession,
-    required this.getConfig,
     Uuid? uuid,
   }) : uuid = uuid ?? const Uuid(),
        super(const SearchState());
@@ -29,7 +26,16 @@ class SearchCubit extends Cubit<SearchState> {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return;
 
-    emit(state.copyWith(status: SearchStatus.loading, query: trimmed));
+    emit(
+      state.copyWith(
+        status: SearchStatus.loading,
+        query: trimmed,
+        results: const [],
+        llmStatus: LlmRankingStatus.notConfigured,
+        modelUsed: null,
+        llmErrorMessage: null,
+      ),
+    );
 
     final result = await searchAndRank(SearchParams(trimmed));
     await result.fold(
@@ -40,12 +46,15 @@ class SearchCubit extends Cubit<SearchState> {
           needsAuth: failure is NotAuthenticatedFailure,
         ),
       ),
-      (scores) async {
+      (ranking) async {
+        final scores = ranking.scores;
         emit(
           state.copyWith(
             status: scores.isEmpty ? SearchStatus.empty : SearchStatus.loaded,
             results: scores,
-            modelUsed: await _rankingModel(),
+            llmStatus: ranking.llmStatus,
+            modelUsed: ranking.modelUsed,
+            llmErrorMessage: ranking.llmErrorMessage,
           ),
         );
         if (scores.isNotEmpty) {
@@ -66,15 +75,6 @@ class SearchCubit extends Cubit<SearchState> {
         createdAt: now,
         updatedAt: now,
       ),
-    );
-  }
-
-  /// Model id the ranking ran with, or null when no LLM is configured.
-  Future<String?> _rankingModel() async {
-    final result = await getConfig(const NoParams());
-    return result.fold(
-      (_) => null,
-      (config) => config.isConfigured ? config.effectiveModel : null,
     );
   }
 

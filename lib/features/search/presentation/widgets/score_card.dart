@@ -55,6 +55,17 @@ class ScoreCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _ScorePart(label: 'Activity', value: score.activityScore),
+                  _ScorePart(label: 'Size', value: score.subscriberScore),
+                  _ScorePart(label: 'Keyword', value: score.relevanceScore),
+                  _ScorePart(label: 'LLM', value: score.semanticScore),
+                ],
+              ),
               if (score.llmReasoning != null &&
                   score.llmReasoning!.isNotEmpty) ...[
                 const SizedBox(height: 8),
@@ -90,6 +101,27 @@ class ScoreCard extends StatelessWidget {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return '$n';
+  }
+}
+
+class _ScorePart extends StatelessWidget {
+  final String label;
+  final double value;
+
+  const _ScorePart({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final pct = (value * 100).round();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text('$label $pct%', style: theme.textTheme.labelSmall),
+    );
   }
 }
 

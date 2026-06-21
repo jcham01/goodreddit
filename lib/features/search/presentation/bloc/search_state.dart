@@ -2,14 +2,18 @@ part of 'search_cubit.dart';
 
 enum SearchStatus { initial, loading, loaded, empty, error }
 
+const _unset = Object();
+
 class SearchState extends Equatable {
   final SearchStatus status;
   final String query;
   final List<SubredditScore> results;
 
-  /// Model id used for the LLM ranking of [results]; null when no LLM is
-  /// configured (heuristic ranking only).
+  /// Truthful source information for the current ranking. [modelUsed] is set
+  /// only when an LLM call was actually attempted for this result set.
+  final LlmRankingStatus llmStatus;
   final String? modelUsed;
+  final String? llmErrorMessage;
   final String? errorMessage;
   final bool needsAuth;
 
@@ -17,7 +21,9 @@ class SearchState extends Equatable {
     this.status = SearchStatus.initial,
     this.query = '',
     this.results = const [],
+    this.llmStatus = LlmRankingStatus.notConfigured,
     this.modelUsed,
+    this.llmErrorMessage,
     this.errorMessage,
     this.needsAuth = false,
   });
@@ -26,7 +32,9 @@ class SearchState extends Equatable {
     SearchStatus? status,
     String? query,
     List<SubredditScore>? results,
-    String? modelUsed,
+    LlmRankingStatus? llmStatus,
+    Object? modelUsed = _unset,
+    Object? llmErrorMessage = _unset,
     String? errorMessage,
     bool? needsAuth,
   }) {
@@ -34,7 +42,11 @@ class SearchState extends Equatable {
       status: status ?? this.status,
       query: query ?? this.query,
       results: results ?? this.results,
-      modelUsed: modelUsed ?? this.modelUsed,
+      llmStatus: llmStatus ?? this.llmStatus,
+      modelUsed: modelUsed == _unset ? this.modelUsed : modelUsed as String?,
+      llmErrorMessage: llmErrorMessage == _unset
+          ? this.llmErrorMessage
+          : llmErrorMessage as String?,
       errorMessage: errorMessage,
       needsAuth: needsAuth ?? false,
     );
@@ -45,7 +57,9 @@ class SearchState extends Equatable {
     status,
     query,
     results,
+    llmStatus,
     modelUsed,
+    llmErrorMessage,
     errorMessage,
     needsAuth,
   ];

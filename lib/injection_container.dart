@@ -150,10 +150,7 @@ Future<void> initDependencies() async {
   sl
     ..registerLazySingleton(() => AuthCubit(getAuthStatus: sl(), logout: sl()))
     ..registerLazySingleton(() => UpdateCubit(checkForUpdate: sl()))
-    ..registerFactory(
-      () =>
-          SearchCubit(searchAndRank: sl(), saveSession: sl(), getConfig: sl()),
-    )
+    ..registerFactory(() => SearchCubit(searchAndRank: sl(), saveSession: sl()))
     ..registerFactory(() => ScraperCubit(scrapeContent: sl()))
     ..registerFactory(
       () => GeneratorCubit(
