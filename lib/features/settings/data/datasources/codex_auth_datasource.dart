@@ -408,6 +408,7 @@ class CodexAuthDataSource implements CodexCaller {
         headers: _authHeaders(fresh),
       );
       _log('listModels ← HTTP ${res.status}');
+      _logBlock('models body', res.body);
       if (res.status != 200) return const [];
       return _parseModelIds(res.body);
     } catch (e) {
@@ -662,11 +663,10 @@ class CodexAuthDataSource implements CodexCaller {
       return const [];
     }
 
+    // Only codex-named slugs are valid for the codex /responses endpoint; the
+    // curated valid ids (e.g. gpt-5.5) are merged in by the repository.
     final codexLike =
-        ids.where((id) {
-          final l = id.toLowerCase();
-          return l.contains('codex') || l.startsWith('gpt-5');
-        }).toList()..sort();
+        ids.where((id) => id.toLowerCase().contains('codex')).toList()..sort();
     return codexLike;
   }
 

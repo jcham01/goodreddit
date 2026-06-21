@@ -37,9 +37,11 @@ class CodexConstants {
   static const String codexResponsesUrl =
       '$chatgptOrigin/backend-api/codex/responses';
 
-  /// Live model list (best-effort; endpoint unverified — degrades to the offline
-  /// fallback in [ApiConstants.openaiCodexFallbackModels] on any failure).
-  static const String codexModelsUrl = '$chatgptOrigin/backend-api/codex/models';
+  /// Live model list — the ChatGPT model-picker endpoint (`{"models":[{slug…}]}`).
+  /// Best-effort: codex-named slugs are merged with the curated
+  /// [ApiConstants.openaiCodexFallbackModels]; failures fall back to the curated
+  /// list. (The earlier `/backend-api/codex/models` guess returned 400.)
+  static const String codexModelsUrl = '$chatgptOrigin/backend-api/models';
 
   /// Read-only usage/quota endpoint (5h + weekly windows). Polling it does NOT
   /// consume model quota. Same shape also arrives as `x-codex-*` headers on each

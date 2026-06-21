@@ -40,15 +40,17 @@ class SettingsRepositoryImpl implements SettingsRepository {
     LlmProvider provider,
     String apiKey,
   ) async {
-    // Codex has no API key — its live list comes from the ChatGPT session.
+    // Codex has no API key — its live list comes from the ChatGPT session and is
+    // merged with the curated valid ids (so the dropdown always has working
+    // models, plus any live codex models the account exposes).
     if (provider == LlmProvider.openaiCodex) {
+      final curated = _fallbackModels(provider);
       try {
-        final models = await modelCatalogDataSource.fetchModels(provider, '');
-        if (models.isNotEmpty) return Right(models);
+        final live = await modelCatalogDataSource.fetchModels(provider, '');
+        return Right(<String>{...curated, ...live}.toList());
       } on LlmException {
-        // Degrade to the static catalog below.
+        return Right(curated);
       }
-      return Right(_fallbackModels(provider));
     }
 
     if (apiKey.isNotEmpty) {
