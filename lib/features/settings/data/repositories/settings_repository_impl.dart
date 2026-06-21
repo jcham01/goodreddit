@@ -40,6 +40,17 @@ class SettingsRepositoryImpl implements SettingsRepository {
     LlmProvider provider,
     String apiKey,
   ) async {
+    // Codex has no API key — its live list comes from the ChatGPT session.
+    if (provider == LlmProvider.openaiCodex) {
+      try {
+        final models = await modelCatalogDataSource.fetchModels(provider, '');
+        if (models.isNotEmpty) return Right(models);
+      } on LlmException {
+        // Degrade to the static catalog below.
+      }
+      return Right(_fallbackModels(provider));
+    }
+
     if (apiKey.isNotEmpty) {
       try {
         final models = await modelCatalogDataSource.fetchModels(
@@ -63,6 +74,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
         return ApiConstants.openaiFallbackModels;
       case LlmProvider.google:
         return ApiConstants.googleFallbackModels;
+      case LlmProvider.openaiCodex:
+        return ApiConstants.openaiCodexFallbackModels;
     }
   }
 }

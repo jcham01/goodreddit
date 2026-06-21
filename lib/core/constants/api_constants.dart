@@ -37,6 +37,9 @@ class ApiConstants {
       'https://generativelanguage.googleapis.com/v1beta/models';
   static const String googleDefaultModel = 'gemini-2.5-flash';
 
+  // OpenAI Codex provider (device-code auth is handled by Codex surfaces).
+  static const String openaiCodexDefaultModel = 'gpt-5.5';
+
   // Model catalogs — live list endpoints, queried with the user's API key
   static const String anthropicModelsUrl =
       'https://api.anthropic.com/v1/models';
@@ -67,6 +70,11 @@ class ApiConstants {
     'gemini-2.5-pro',
     'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
+  ];
+  static const List<String> openaiCodexFallbackModels = [
+    'gpt-5.5',
+    'gpt-5.4-mini',
+    'gpt-5.3-codex-spark',
   ];
 
   // App updates — latest GitHub release (the repo must stay public for the

@@ -30,6 +30,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       final provider = switch (providerStr) {
         'openai' => LlmProvider.openai,
         'google' => LlmProvider.google,
+        'openaiCodex' => LlmProvider.openaiCodex,
+        'openai_codex' => LlmProvider.openaiCodex,
         _ => LlmProvider.claude,
       };
 
@@ -43,7 +45,11 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   Future<void> saveConfig(AgentConfig config) async {
     try {
       await secureStorage.write(key: _providerKey, value: config.provider.name);
-      await secureStorage.write(key: _apiKeyKey, value: config.apiKey);
+      if (config.usesApiKey) {
+        await secureStorage.write(key: _apiKeyKey, value: config.apiKey);
+      } else {
+        await secureStorage.delete(key: _apiKeyKey);
+      }
       if (config.model != null && config.model!.isNotEmpty) {
         await secureStorage.write(key: _modelKey, value: config.model);
       } else {

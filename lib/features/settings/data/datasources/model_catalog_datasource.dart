@@ -1,18 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:goodreddit/core/constants/api_constants.dart';
 import 'package:goodreddit/core/error/exceptions.dart';
+import 'package:goodreddit/features/settings/data/datasources/codex_auth_datasource.dart';
 import 'package:goodreddit/features/settings/domain/entities/agent_config.dart';
 
 /// Fetches the live list of model ids from the configured provider's
-/// list-models endpoint, using the user's API key.
+/// list-models endpoint, using the user's API key (or the Codex session).
 abstract class ModelCatalogDataSource {
   Future<List<String>> fetchModels(LlmProvider provider, String apiKey);
 }
 
 class ModelCatalogDataSourceImpl implements ModelCatalogDataSource {
   final Dio dio;
+  final CodexCaller codex;
 
-  ModelCatalogDataSourceImpl({required this.dio});
+  ModelCatalogDataSourceImpl({required this.dio, required this.codex});
 
   @override
   Future<List<String>> fetchModels(LlmProvider provider, String apiKey) async {
@@ -24,6 +26,9 @@ class ModelCatalogDataSourceImpl implements ModelCatalogDataSource {
           return await _fetchOpenai(apiKey);
         case LlmProvider.google:
           return await _fetchGoogle(apiKey);
+        case LlmProvider.openaiCodex:
+          // Live (best-effort) via the Codex session; [] degrades to fallback.
+          return await codex.listModels();
       }
     } on DioException catch (e) {
       throw LlmException('Failed to list models: ${e.message}');

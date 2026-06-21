@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:goodreddit/core/constants/api_constants.dart';
 import 'package:goodreddit/core/error/exceptions.dart';
+import 'package:goodreddit/features/settings/data/datasources/codex_auth_datasource.dart';
 import 'package:goodreddit/features/settings/domain/entities/agent_config.dart';
 
 abstract class LlmGeneratorDataSource {
@@ -12,8 +13,9 @@ abstract class LlmGeneratorDataSource {
 
 class LlmGeneratorDataSourceImpl implements LlmGeneratorDataSource {
   final Dio dio;
+  final CodexCaller codex;
 
-  LlmGeneratorDataSourceImpl({required this.dio});
+  LlmGeneratorDataSourceImpl({required this.dio, required this.codex});
 
   @override
   Future<String> generateContent({
@@ -28,6 +30,8 @@ class LlmGeneratorDataSourceImpl implements LlmGeneratorDataSource {
           return await _callOpenAI(prompt, config);
         case LlmProvider.google:
           return await _callGoogle(prompt, config);
+        case LlmProvider.openaiCodex:
+          return await codex.generateText(prompt, model: config.effectiveModel);
       }
     } on DioException catch (e) {
       throw LlmException('LLM generation failed: ${e.message}');

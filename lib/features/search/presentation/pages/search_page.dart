@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goodreddit/core/widgets/active_llm_badge.dart';
 import 'package:goodreddit/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:goodreddit/features/auth/presentation/pages/login_page.dart';
 import 'package:goodreddit/features/history/presentation/pages/history_page.dart';
@@ -22,6 +23,8 @@ class _SearchPageState extends State<SearchPage> {
   final _controller = TextEditingController();
   final _filterController = TextEditingController();
   String _filter = '';
+  // Bumped when returning from Settings so the active-LLM badge re-fetches.
+  int _settingsEpoch = 0;
 
   @override
   void initState() {
@@ -56,6 +59,14 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  Future<void> _openSettings() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+    // The provider/model may have changed — refresh the badge.
+    if (mounted) setState(() => _settingsEpoch++);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,11 +83,23 @@ class _SearchPageState extends State<SearchPage> {
           IconButton(
             tooltip: 'Settings',
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsPage())),
+            onPressed: _openSettings,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(40),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: _openSettings,
+                child: ActiveLlmBadge(key: ValueKey(_settingsEpoch)),
+              ),
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [

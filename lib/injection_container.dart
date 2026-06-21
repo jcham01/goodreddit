@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:goodreddit/core/network/chatgpt_web_client.dart';
 import 'package:goodreddit/core/network/reddit_web_client.dart';
 import 'package:goodreddit/features/auth/data/datasources/reddit_auth_datasource.dart';
 import 'package:goodreddit/features/auth/data/repositories/auth_repository_impl.dart';
@@ -33,6 +34,7 @@ import 'package:goodreddit/features/search/data/repositories/subreddit_repositor
 import 'package:goodreddit/features/search/domain/repositories/subreddit_repository.dart';
 import 'package:goodreddit/features/search/domain/usecases/search_and_rank_subreddits.dart';
 import 'package:goodreddit/features/search/presentation/bloc/search_cubit.dart';
+import 'package:goodreddit/features/settings/data/datasources/codex_auth_datasource.dart';
 import 'package:goodreddit/features/settings/data/datasources/model_catalog_datasource.dart';
 import 'package:goodreddit/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:goodreddit/features/settings/data/repositories/settings_repository_impl.dart';
@@ -64,7 +66,22 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => const Uuid())
     ..registerLazySingleton(() => FileExporter())
     ..registerLazySingleton<Box<String>>(() => sessionBox)
-    ..registerLazySingleton(() => RedditWebClient());
+    ..registerLazySingleton(() => RedditWebClient())
+    ..registerLazySingleton(() => ChatGptWebClient());
+
+  // Codex "Sign in with ChatGPT": one instance, exposed both as the concrete
+  // type (the Settings panel needs sign-in/probe) and as the narrow CodexCaller
+  // the generator/ranking/catalog datasources depend on.
+  sl
+    ..registerLazySingleton(
+      () => CodexAuthDataSource(
+        secureStorage: sl(),
+        uuid: sl(),
+        chatGptWebClient: sl(),
+        dio: sl(),
+      ),
+    )
+    ..registerLazySingleton<CodexCaller>(() => sl<CodexAuthDataSource>());
 
   // ---- Datasources ----
   sl
@@ -78,16 +95,16 @@ Future<void> initDependencies() async {
       () => RedditScraperDataSourceImpl(webClient: sl()),
     )
     ..registerLazySingleton<LlmRankingDataSource>(
-      () => LlmRankingDataSourceImpl(dio: sl()),
+      () => LlmRankingDataSourceImpl(dio: sl(), codex: sl()),
     )
     ..registerLazySingleton<LlmGeneratorDataSource>(
-      () => LlmGeneratorDataSourceImpl(dio: sl()),
+      () => LlmGeneratorDataSourceImpl(dio: sl(), codex: sl()),
     )
     ..registerLazySingleton<SettingsLocalDataSource>(
       () => SettingsLocalDataSourceImpl(secureStorage: sl()),
     )
     ..registerLazySingleton<ModelCatalogDataSource>(
-      () => ModelCatalogDataSourceImpl(dio: sl()),
+      () => ModelCatalogDataSourceImpl(dio: sl(), codex: sl()),
     )
     ..registerLazySingleton<SessionLocalDataSource>(
       () => SessionLocalDataSourceImpl(box: sl()),

@@ -50,12 +50,12 @@ class ExportPage extends StatelessWidget {
                 future: GetIt.I<GetConfig>()(const NoParams()),
                 builder: (context, snapshot) {
                   final config = snapshot.data?.fold((_) => null, (c) => c);
+                  final configured = config?.isConfigured ?? false;
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: ModelBadge(
-                      model: (config?.isConfigured ?? false)
-                          ? config!.effectiveModel
-                          : null,
+                      provider: configured ? config!.provider.label : null,
+                      model: configured ? config!.effectiveModel : null,
                       prefix: 'Generates with',
                     ),
                   );

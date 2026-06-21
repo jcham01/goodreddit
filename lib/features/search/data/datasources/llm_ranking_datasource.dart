@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:goodreddit/core/constants/api_constants.dart';
 import 'package:goodreddit/core/error/exceptions.dart';
+import 'package:goodreddit/features/settings/data/datasources/codex_auth_datasource.dart';
 import 'package:goodreddit/features/settings/domain/entities/agent_config.dart';
 
 /// Asks an LLM to rate each subreddit's semantic relevance to the query.
@@ -17,8 +18,9 @@ abstract class LlmRankingDataSource {
 
 class LlmRankingDataSourceImpl implements LlmRankingDataSource {
   final Dio dio;
+  final CodexCaller codex;
 
-  LlmRankingDataSourceImpl({required this.dio});
+  LlmRankingDataSourceImpl({required this.dio, required this.codex});
 
   @override
   Future<Map<String, dynamic>> rankSubreddits({
@@ -35,6 +37,12 @@ class LlmRankingDataSourceImpl implements LlmRankingDataSource {
           return await _callOpenAI(prompt, config);
         case LlmProvider.google:
           return await _callGoogle(prompt, config);
+        case LlmProvider.openaiCodex:
+          final content = await codex.generateText(
+            prompt,
+            model: config.effectiveModel,
+          );
+          return _parseJsonResponse(content);
       }
     } on DioException catch (e) {
       throw LlmException('LLM API call failed: ${e.message}');
