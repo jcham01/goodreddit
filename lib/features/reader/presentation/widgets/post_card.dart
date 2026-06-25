@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:goodreddit/core/util/format.dart';
+import 'package:goodreddit/features/reader/presentation/pages/post_detail_page.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-/// Feed card for a single post. Read-only in Phase 2: tapping opens the post on
-/// reddit.com (the in-app detail lands in Phase 3). Vote/save arrive in Phase 4.
+/// Feed card for a single post. Tapping opens the in-app detail (comments,
+/// media, self-text). Vote/save arrive in Phase 4.
 class PostCard extends StatelessWidget {
   final Post post;
   const PostCard({super.key, required this.post});
 
-  Future<void> _open(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final ok = await launchUrl(
-      Uri.parse(post.fullPermalink),
-      mode: LaunchMode.externalApplication,
+  void _open(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PostDetailPage(post: post)),
     );
-    if (!ok) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible d’ouvrir le post.')),
-      );
-    }
   }
 
   @override

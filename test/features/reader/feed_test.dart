@@ -2,8 +2,10 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:goodreddit/core/error/failures.dart';
 import 'package:goodreddit/features/reader/data/models/feed_page_model.dart';
+import 'package:goodreddit/features/reader/domain/entities/comment_sort.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_page.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_source.dart';
+import 'package:goodreddit/features/reader/domain/entities/post_detail.dart';
 import 'package:goodreddit/features/reader/domain/repositories/reader_repository.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
@@ -34,6 +36,16 @@ class _FakeReaderRepository implements ReaderRepository {
     int limit = 25,
   }) async {
     return Right(pages[calls++ % pages.length]);
+  }
+
+  @override
+  Future<Either<Failure, PostDetail>> getPostDetail({
+    required String subreddit,
+    required String postId,
+    CommentSort sort = CommentSort.best,
+    int limit = 50,
+  }) async {
+    throw UnimplementedError();
   }
 }
 
