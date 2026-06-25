@@ -112,6 +112,7 @@ class _FeedTabState extends State<FeedTab> {
                 loadingMore: state.loadingMore,
                 controller: _scroll,
                 onRefresh: () => context.read<FeedCubit>().refresh(),
+                onNeedsAuth: _openLogin,
               );
             },
           ),

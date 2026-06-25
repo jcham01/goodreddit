@@ -76,8 +76,11 @@ class _SubredditViewState extends State<_SubredditView> {
         children: [
           BlocSelector<SubredditCubit, SubredditState, SubredditAboutSel>(
             selector: (s) => SubredditAboutSel(s.name, s.about),
-            builder: (context, sel) =>
-                SubredditHeader(name: sel.name, about: sel.about),
+            builder: (context, sel) => SubredditHeader(
+              name: sel.name,
+              about: sel.about,
+              onNeedsAuth: _openLogin,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
@@ -128,6 +131,7 @@ class _SubredditViewState extends State<_SubredditView> {
                   loadingMore: state.loadingMore,
                   controller: _scroll,
                   onRefresh: () => context.read<SubredditCubit>().refresh(),
+                  onNeedsAuth: _openLogin,
                 );
               },
             ),

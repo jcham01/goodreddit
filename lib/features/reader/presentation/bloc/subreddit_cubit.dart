@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/bloc/safe_cubit.dart';
 import 'package:goodreddit/core/error/failures.dart';
+import 'package:goodreddit/features/interactions/presentation/bloc/interactions_cubit.dart';
 import 'package:goodreddit/features/reader/domain/entities/subreddit_about.dart';
 import 'package:goodreddit/features/reader/domain/entities/subreddit_sort.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_subreddit_about.dart';
@@ -16,12 +17,17 @@ class SubredditCubit extends Cubit<SubredditState> with SafeEmit<SubredditState>
   final GetSubredditFeed getFeed;
   final GetSubredditAbout getAbout;
 
+  /// Shared store: seeds vote/save baselines for the listing and the subscribe
+  /// baseline for this subreddit's header.
+  final InteractionsCubit interactions;
+
   int _gen = 0;
   bool _aboutInFlight = false;
 
   SubredditCubit({
     required this.getFeed,
     required this.getAbout,
+    required this.interactions,
     required String name,
   }) : super(SubredditState(name: name));
 
@@ -55,14 +61,17 @@ class SubredditCubit extends Cubit<SubredditState> with SafeEmit<SubredditState>
     if (gen != _gen || isClosed) return;
     result.fold(
       (_) => safeEmit(state.copyWith(loadingMore: false)),
-      (page) => safeEmit(
-        state.copyWith(
-          posts: [...state.posts, ...page.posts],
-          after: page.after,
-          hasMore: page.hasMore,
-          loadingMore: false,
-        ),
-      ),
+      (page) {
+        interactions.seedPosts(page.posts);
+        safeEmit(
+          state.copyWith(
+            posts: [...state.posts, ...page.posts],
+            after: page.after,
+            hasMore: page.hasMore,
+            loadingMore: false,
+          ),
+        );
+      },
     );
   }
 
@@ -77,7 +86,10 @@ class SubredditCubit extends Cubit<SubredditState> with SafeEmit<SubredditState>
     if (isClosed) return;
     result.fold(
       (_) {}, // header is best-effort; the listing carries the real error
-      (about) => safeEmit(state.copyWith(about: about)),
+      (about) {
+        interactions.seedSub(about);
+        safeEmit(state.copyWith(about: about));
+      },
     );
   }
 
@@ -105,14 +117,17 @@ class SubredditCubit extends Cubit<SubredditState> with SafeEmit<SubredditState>
           needsAuth: f is NotAuthenticatedFailure,
         ),
       ),
-      (page) => safeEmit(
-        state.copyWith(
-          status: SubredditStatus.loaded,
-          posts: page.posts,
-          after: page.after,
-          hasMore: page.hasMore,
-        ),
-      ),
+      (page) {
+        interactions.seedPosts(page.posts);
+        safeEmit(
+          state.copyWith(
+            status: SubredditStatus.loaded,
+            posts: page.posts,
+            after: page.after,
+            hasMore: page.hasMore,
+          ),
+        );
+      },
     );
   }
 

@@ -130,7 +130,9 @@ class _DetailViewState extends State<_DetailView> {
             onRefresh: cubit.refresh,
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(child: _PostBody(state: state)),
+                SliverToBoxAdapter(
+                  child: _PostBody(state: state, onNeedsAuth: _openLogin),
+                ),
                 ..._commentsSlivers(context, state),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
@@ -209,8 +211,9 @@ class _DetailViewState extends State<_DetailView> {
 /// Header + media + self-text + the "Commentaires" separator.
 class _PostBody extends StatelessWidget {
   final PostDetailState state;
+  final VoidCallback onNeedsAuth;
 
-  const _PostBody({required this.state});
+  const _PostBody({required this.state, required this.onNeedsAuth});
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +224,7 @@ class _PostBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        PostHeader(post: post),
+        PostHeader(post: post, onNeedsAuth: onNeedsAuth),
         if (detail != null)
           PostMediaView(post: post, media: detail.media),
         if (post.selfText.trim().isNotEmpty)

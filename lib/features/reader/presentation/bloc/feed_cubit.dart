@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/bloc/safe_cubit.dart';
 import 'package:goodreddit/core/error/failures.dart';
+import 'package:goodreddit/features/interactions/presentation/bloc/interactions_cubit.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_source.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
@@ -11,12 +12,17 @@ part 'feed_state.dart';
 class FeedCubit extends Cubit<FeedState> with SafeEmit<FeedState> {
   final GetFeed getFeed;
 
+  /// Shared interaction store: each loaded page seeds vote/save baselines so the
+  /// post cards' [VoteControls] render live from the first frame.
+  final InteractionsCubit interactions;
+
   // Monotonic generation: each load captures it before awaiting and drops its
   // result if a newer load (or close) superseded it. Cheap logical cancellation
   // over the non-cancelable in-WebView fetch.
   int _gen = 0;
 
-  FeedCubit({required this.getFeed}) : super(const FeedState());
+  FeedCubit({required this.getFeed, required this.interactions})
+    : super(const FeedState());
 
   Future<void> load({FeedSource? source}) async {
     final src = source ?? state.source;
@@ -40,14 +46,17 @@ class FeedCubit extends Cubit<FeedState> with SafeEmit<FeedState> {
           needsAuth: f is NotAuthenticatedFailure,
         ),
       ),
-      (page) => safeEmit(
-        state.copyWith(
-          status: FeedStatus.loaded,
-          posts: page.posts,
-          after: page.after,
-          hasMore: page.hasMore,
-        ),
-      ),
+      (page) {
+        interactions.seedPosts(page.posts);
+        safeEmit(
+          state.copyWith(
+            status: FeedStatus.loaded,
+            posts: page.posts,
+            after: page.after,
+            hasMore: page.hasMore,
+          ),
+        );
+      },
     );
   }
 
@@ -72,14 +81,17 @@ class FeedCubit extends Cubit<FeedState> with SafeEmit<FeedState> {
     if (gen != _gen || isClosed) return;
     result.fold(
       (_) => safeEmit(state.copyWith(loadingMore: false)),
-      (page) => safeEmit(
-        state.copyWith(
-          posts: [...state.posts, ...page.posts],
-          after: page.after,
-          hasMore: page.hasMore,
-          loadingMore: false,
-        ),
-      ),
+      (page) {
+        interactions.seedPosts(page.posts);
+        safeEmit(
+          state.copyWith(
+            posts: [...state.posts, ...page.posts],
+            after: page.after,
+            hasMore: page.hasMore,
+            loadingMore: false,
+          ),
+        );
+      },
     );
   }
 

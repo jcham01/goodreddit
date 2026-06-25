@@ -141,6 +141,88 @@ class RedditWebClient {
     }
   }
 
+  /// Sends an `application/x-www-form-urlencoded` POST to a Reddit `/api/*`
+  /// action endpoint (e.g. `/api/vote`, `/api/save`, `/api/subscribe`),
+  /// authenticated by the shared session cookie plus the CSRF [modhash].
+  ///
+  /// The modhash is sent both as the `X-Modhash` header and the `uh` field,
+  /// matching what reddit.com's own JS does. Returns the decoded JSON body:
+  /// Reddit answers `{}` on a bare success and
+  /// `{ "json": { "errors": [...] } }` when it rejects the action.
+  Future<dynamic> postForm(
+    String path, {
+    required String modhash,
+    Map<String, String> fields = const {},
+  }) async {
+    await ensureReady();
+    final controller = _controller;
+    if (controller == null) {
+      throw const RedditException('Reddit client not initialised');
+    }
+
+    final url = _buildUrl(path, null);
+    final form = <String, String>{...fields, 'uh': modhash, 'raw_json': '1'};
+    final body = form.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&');
+
+    final result = await controller.callAsyncJavaScript(
+      functionBody: '''
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Accept": "application/json, text/plain, */*",
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "X-Modhash": modhash,
+            },
+            body: body,
+          });
+          const text = await resp.text();
+          return { status: resp.status, body: text };
+        } catch (e) {
+          return { status: -1, body: String(e) };
+        }
+      ''',
+      arguments: {'url': url, 'modhash': modhash, 'body': body},
+    );
+
+    if (result == null || result.error != null) {
+      throw RedditException(
+        'In-page request failed: ${result?.error ?? 'no result'}',
+      );
+    }
+
+    final value = result.value as Map<dynamic, dynamic>;
+    final status = (value['status'] as num).toInt();
+    final responseBody = value['body'] as String? ?? '';
+
+    debugPrint(
+      '[GoodReddit/web] POST $path → HTTP $status (${responseBody.length} bytes)',
+    );
+
+    if (status == 401 || status == 403) {
+      if (!await isLoggedIn()) {
+        throw const NotAuthenticatedException();
+      }
+      throw RedditException('Reddit refused the request (HTTP $status)');
+    }
+    if (status < 200 || status >= 300) {
+      throw RedditException(_httpErrorMessage(status));
+    }
+
+    if (responseBody.isEmpty) return const <String, dynamic>{};
+    try {
+      return jsonDecode(responseBody);
+    } catch (e) {
+      throw RedditException('Failed to parse Reddit response: $e');
+    }
+  }
+
   String _buildUrl(String path, Map<String, dynamic>? query) {
     final buffer = StringBuffer(ApiConstants.redditOrigin)..write(path);
     if (query != null && query.isNotEmpty) {

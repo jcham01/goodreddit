@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/usecases/usecase.dart';
 import 'package:goodreddit/features/auth/domain/usecases/get_auth_status.dart';
 import 'package:goodreddit/features/auth/domain/usecases/logout.dart';
+import 'package:goodreddit/features/interactions/presentation/bloc/interactions_cubit.dart';
 
 part 'auth_state.dart';
 
@@ -10,8 +11,15 @@ class AuthCubit extends Cubit<AuthState> {
   final GetAuthStatus getAuthStatus;
   final Logout logout;
 
-  AuthCubit({required this.getAuthStatus, required this.logout})
-    : super(const AuthState());
+  /// The shared interaction store, wiped on sign-out so a different Reddit
+  /// account never inherits the previous user's votes/saves/subscriptions.
+  final InteractionsCubit interactions;
+
+  AuthCubit({
+    required this.getAuthStatus,
+    required this.logout,
+    required this.interactions,
+  }) : super(const AuthState());
 
   Future<void> refresh() async {
     emit(state.copyWith(status: AuthStatus.checking));
@@ -33,6 +41,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> signOut() async {
     await logout(const NoParams());
+    interactions.clear();
     await refresh();
   }
 }

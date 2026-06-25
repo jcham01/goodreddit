@@ -16,6 +16,8 @@ import 'package:goodreddit/features/reader/domain/usecases/get_post_detail.dart'
 import 'package:goodreddit/features/reader/presentation/bloc/post_detail_cubit.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
+import '../../helpers/fake_interactions_cubit.dart';
+
 Map<String, dynamic> _listing(List children) => {
   'kind': 'Listing',
   'data': {'children': children},
@@ -310,6 +312,7 @@ void main() {
       final repo = _FakeReaderRepository();
       final cubit = PostDetailCubit(
         getPostDetail: GetPostDetail(repo),
+        interactions: fakeInteractionsCubit(),
         seed: seed,
       );
 
@@ -337,6 +340,7 @@ void main() {
       final repo = _FailSecondReaderRepository();
       final cubit = PostDetailCubit(
         getPostDetail: GetPostDetail(repo),
+        interactions: fakeInteractionsCubit(),
         seed: seed,
       );
 

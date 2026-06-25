@@ -24,6 +24,14 @@ class Post extends Equatable {
   final bool locked;
   final double? upvoteRatio;
 
+  // T2 action seed state: the server baseline only. The live vote/save overlay
+  // lives in the interactions feature (keyed by [fullname]), NOT on Post — this
+  // read-model stays "dumb" so the scraper/generator keep using it untouched.
+  final String? name; // the t3_ fullname, e.g. "t3_abc"
+  final bool? likes; // tri-state: true=upvoted, false=downvoted, null=no vote
+  final bool saved;
+  final bool scoreHidden;
+
   const Post({
     required this.id,
     required this.title,
@@ -44,6 +52,10 @@ class Post extends Equatable {
     this.spoiler = false,
     this.locked = false,
     this.upvoteRatio,
+    this.name,
+    this.likes,
+    this.saved = false,
+    this.scoreHidden = false,
   });
 
   /// A usable image URL, or null when Reddit returned a sentinel
@@ -56,6 +68,10 @@ class Post extends Equatable {
 
   /// Full permalink on www.reddit.com.
   String get fullPermalink => 'https://www.reddit.com$permalink';
+
+  /// The t3_ fullname Reddit's write endpoints need as the `id` (e.g.
+  /// `/api/vote`, `/api/save`). Synthesized when the listing omitted `name`.
+  String get fullname => (name != null && name!.isNotEmpty) ? name! : 't3_$id';
 
   @override
   List<Object?> get props => [
@@ -74,5 +90,9 @@ class Post extends Equatable {
     thumbnail,
     preview,
     upvoteRatio,
+    name,
+    likes,
+    saved,
+    scoreHidden,
   ];
 }

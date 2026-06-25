@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:goodreddit/core/util/format.dart';
+import 'package:goodreddit/features/interactions/presentation/widgets/vote_controls.dart';
 import 'package:goodreddit/features/reader/presentation/pages/post_detail_page.dart';
 import 'package:goodreddit/features/reader/presentation/widgets/subreddit_link.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
 /// Feed card for a single post. Tapping opens the in-app detail (comments,
-/// media, self-text). Vote/save arrive in Phase 4.
+/// media, self-text); the score row carries live vote + save controls.
 class PostCard extends StatelessWidget {
   final Post post;
-  const PostCard({super.key, required this.post});
+
+  /// Invoked when an anonymous user taps a vote/save control (opens login).
+  final VoidCallback onNeedsAuth;
+
+  const PostCard({super.key, required this.post, required this.onNeedsAuth});
 
   void _open(BuildContext context) {
     Navigator.of(context).push(
@@ -83,11 +88,12 @@ class PostCard extends StatelessWidget {
                   if (post.locked) const _Badge('Verrouillé'),
                   if (post.isStickied) const _Badge('Épinglé'),
                   const Spacer(),
-                  Icon(Icons.arrow_upward, size: 16, color: muted),
-                  const SizedBox(width: 2),
-                  Text(
-                    compactCount(post.score),
-                    style: theme.textTheme.labelMedium,
+                  VoteControls(
+                    fullname: post.fullname,
+                    baseScore: post.score,
+                    scoreHidden: post.scoreHidden,
+                    onNeedsAuth: onNeedsAuth,
+                    compact: true,
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.mode_comment_outlined, size: 15, color: muted),

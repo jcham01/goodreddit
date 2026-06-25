@@ -19,6 +19,8 @@ import 'package:goodreddit/features/reader/domain/usecases/get_subreddit_feed.da
 import 'package:goodreddit/features/reader/presentation/bloc/subreddit_cubit.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
+import '../../helpers/fake_interactions_cubit.dart';
+
 Post _post(String id) => Post(
   id: id,
   title: id,
@@ -105,6 +107,7 @@ void main() {
       final cubit = SubredditCubit(
         getFeed: GetSubredditFeed(repo),
         getAbout: GetSubredditAbout(repo),
+        interactions: fakeInteractionsCubit(),
         name: 'x',
       );
 
@@ -133,6 +136,7 @@ void main() {
       final cubit = SubredditCubit(
         getFeed: GetSubredditFeed(repo),
         getAbout: GetSubredditAbout(repo),
+        interactions: fakeInteractionsCubit(),
         name: 'x',
       );
 
@@ -156,6 +160,7 @@ void main() {
       final cubit = SubredditCubit(
         getFeed: GetSubredditFeed(repo),
         getAbout: GetSubredditAbout(repo),
+        interactions: fakeInteractionsCubit(),
         name: 'x',
       );
 
@@ -176,6 +181,7 @@ void main() {
       final cubit = SubredditCubit(
         getFeed: GetSubredditFeed(repo),
         getAbout: GetSubredditAbout(repo),
+        interactions: fakeInteractionsCubit(),
         name: 'x',
       );
 

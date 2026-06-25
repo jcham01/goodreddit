@@ -21,6 +21,10 @@ class PostModel extends Post {
     super.spoiler,
     super.locked,
     super.upvoteRatio,
+    super.name,
+    super.likes,
+    super.saved,
+    super.scoreHidden,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,11 @@ class PostModel extends Post {
       spoiler: data['spoiler'] ?? false,
       locked: data['locked'] ?? false,
       upvoteRatio: (data['upvote_ratio'] as num?)?.toDouble(),
+      name: data['name'] as String?,
+      // Reddit sends a real tri-state bool here; keep null as "no vote".
+      likes: data['likes'] as bool?,
+      saved: data['saved'] == true,
+      scoreHidden: data['score_hidden'] == true || data['hide_score'] == true,
     );
   }
 
@@ -90,6 +99,10 @@ class PostModel extends Post {
       'spoiler': spoiler,
       'locked': locked,
       'upvote_ratio': upvoteRatio,
+      'name': name,
+      'likes': likes,
+      'saved': saved,
+      'score_hidden': scoreHidden,
     };
   }
 }

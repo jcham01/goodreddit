@@ -10,6 +10,8 @@ class SubredditAboutModel extends SubredditAbout {
     super.activeUsers,
     super.iconUrl,
     super.over18,
+    super.fullname,
+    super.userIsSubscriber,
   });
 
   /// Parses the `t5` "about" thing: `{kind:'t5', data:{...}}` (or a bare data
@@ -32,6 +34,8 @@ class SubredditAboutModel extends SubredditAbout {
       activeUsers: (data['active_user_count'] as num?)?.toInt(),
       iconUrl: _icon(data),
       over18: data['over18'] == true || data['over_18'] == true,
+      fullname: data['name'] as String?, // t5_…
+      userIsSubscriber: data['user_is_subscriber'] as bool?,
     );
   }
 

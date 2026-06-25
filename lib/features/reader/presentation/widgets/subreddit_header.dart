@@ -1,15 +1,27 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/util/format.dart';
+import 'package:goodreddit/features/interactions/presentation/bloc/interactions_cubit.dart';
+import 'package:goodreddit/features/interactions/presentation/widgets/subscribe_button.dart';
 import 'package:goodreddit/features/reader/domain/entities/subreddit_about.dart';
 
-/// "About" block for a subreddit: icon, name, member/online counts, and the
-/// public description. Degrades gracefully before [about] arrives.
+/// "About" block for a subreddit: icon, name, subscribe button, member/online
+/// counts, and the public description. Degrades gracefully before [about]
+/// arrives.
 class SubredditHeader extends StatelessWidget {
   final String name;
   final SubredditAbout? about;
 
-  const SubredditHeader({super.key, required this.name, this.about});
+  /// Invoked when an anonymous user taps Subscribe (opens login).
+  final VoidCallback onNeedsAuth;
+
+  const SubredditHeader({
+    super.key,
+    required this.name,
+    required this.onNeedsAuth,
+    this.about,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -50,15 +62,24 @@ class SubredditHeader extends StatelessWidget {
                       ],
                     ),
                     if (about != null)
-                      Text(
-                        _stats(about),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: muted,
+                      // Member count tracks the live subscribe overlay so it
+                      // moves (and rolls back) together with the button.
+                      BlocSelector<InteractionsCubit, InteractionsState, int>(
+                        selector: (s) =>
+                            s.subFor(name)?.displaySubscribers ??
+                            about.subscribers,
+                        builder: (context, members) => Text(
+                          _stats(about, members),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: muted,
+                          ),
                         ),
                       ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              SubscribeButton(srName: name, onNeedsAuth: onNeedsAuth),
             ],
           ),
           if (description.isNotEmpty) ...[
@@ -75,8 +96,8 @@ class SubredditHeader extends StatelessWidget {
     );
   }
 
-  String _stats(SubredditAbout about) {
-    final members = '${compactCount(about.subscribers)} membres';
+  String _stats(SubredditAbout about, int subscribers) {
+    final members = '${compactCount(subscribers)} membres';
     final active = about.activeUsers;
     if (active == null) return members;
     return '$members · ${compactCount(active)} en ligne';

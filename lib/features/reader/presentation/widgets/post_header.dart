@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:goodreddit/core/util/format.dart';
+import 'package:goodreddit/features/interactions/presentation/widgets/vote_controls.dart';
 import 'package:goodreddit/features/reader/presentation/widgets/subreddit_link.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
 /// Title block of a post detail: subreddit · author · time, title, flair, and
-/// the score / comments / upvote-ratio stat row.
+/// the vote/save · upvote-ratio · comments stat row.
 class PostHeader extends StatelessWidget {
   final Post post;
 
-  const PostHeader({super.key, required this.post});
+  /// Invoked when an anonymous user taps a vote/save control (opens login).
+  final VoidCallback onNeedsAuth;
+
+  const PostHeader({super.key, required this.post, required this.onNeedsAuth});
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +51,14 @@ class PostHeader extends StatelessWidget {
               if (post.locked) const _Badge('Verrouillé'),
               if (post.isStickied) const _Badge('Épinglé'),
               const Spacer(),
-              Icon(Icons.arrow_upward, size: 16, color: muted),
-              const SizedBox(width: 2),
-              Text(compactCount(post.score), style: theme.textTheme.labelMedium),
+              VoteControls(
+                fullname: post.fullname,
+                baseScore: post.score,
+                scoreHidden: post.scoreHidden,
+                onNeedsAuth: onNeedsAuth,
+              ),
               if (post.upvoteRatio != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 8),
                 Text(
                   '(${(post.upvoteRatio! * 100).round()} %)',
                   style: theme.textTheme.labelSmall?.copyWith(color: muted),

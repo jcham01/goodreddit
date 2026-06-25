@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goodreddit/core/constants/app_theme.dart';
 import 'package:goodreddit/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:goodreddit/features/history/presentation/bloc/history_cubit.dart';
+import 'package:goodreddit/features/interactions/presentation/bloc/interactions_cubit.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
 import 'package:goodreddit/features/search/presentation/bloc/search_cubit.dart';
 import 'package:goodreddit/features/shell/presentation/pages/home_shell.dart';
@@ -23,6 +24,11 @@ class GoodRedditApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        // The interaction store sits above everything (tabs + every pushed
+        // detail/subreddit route) so vote/save/subscribe stay in sync app-wide.
+        BlocProvider<InteractionsCubit>(
+          create: (_) => di.sl<InteractionsCubit>(),
+        ),
         BlocProvider<AuthCubit>(create: (_) => di.sl<AuthCubit>()),
         BlocProvider<SearchCubit>(create: (_) => di.sl<SearchCubit>()),
         BlocProvider<FeedCubit>(create: (_) => di.sl<FeedCubit>()),

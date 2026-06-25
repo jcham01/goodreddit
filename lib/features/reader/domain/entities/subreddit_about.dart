@@ -10,6 +10,11 @@ class SubredditAbout extends Equatable {
   final String? iconUrl;
   final bool over18;
 
+  // Subscribe seed state (server baseline). The live subscribed overlay lives
+  // in the interactions store keyed by [name]; this only seeds it.
+  final String? fullname; // the t5_ id
+  final bool? userIsSubscriber; // tri-state: null when anonymous/unknown
+
   const SubredditAbout({
     required this.name,
     this.title = '',
@@ -18,6 +23,8 @@ class SubredditAbout extends Equatable {
     this.activeUsers,
     this.iconUrl,
     this.over18 = false,
+    this.fullname,
+    this.userIsSubscriber,
   });
 
   @override
@@ -29,5 +36,7 @@ class SubredditAbout extends Equatable {
     activeUsers,
     iconUrl,
     over18,
+    fullname,
+    userIsSubscriber,
   ];
 }

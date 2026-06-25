@@ -11,10 +11,14 @@ class PostListView extends StatelessWidget {
   final ScrollController? controller;
   final Future<void> Function() onRefresh;
 
+  /// Forwarded to each card so a vote/save tap while signed out opens login.
+  final VoidCallback onNeedsAuth;
+
   const PostListView({
     super.key,
     required this.posts,
     required this.onRefresh,
+    required this.onNeedsAuth,
     this.controller,
     this.loadingMore = false,
   });
@@ -35,7 +39,7 @@ class PostListView extends StatelessWidget {
               child: Center(child: CircularProgressIndicator()),
             );
           }
-          return PostCard(post: posts[i]);
+          return PostCard(post: posts[i], onNeedsAuth: onNeedsAuth);
         },
       ),
     );

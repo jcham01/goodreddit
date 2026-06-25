@@ -13,6 +13,8 @@ import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
+import '../../helpers/fake_interactions_cubit.dart';
+
 Post _post(String id) => Post(
   id: id,
   title: id.toUpperCase(),
@@ -104,7 +106,10 @@ void main() {
         const FeedPage(posts: [], after: null),
       ]);
       repo.pages[1] = FeedPage(posts: [_post('b')], after: null);
-      final cubit = FeedCubit(getFeed: GetFeed(repo));
+      final cubit = FeedCubit(
+        getFeed: GetFeed(repo),
+        interactions: fakeInteractionsCubit(),
+      );
 
       await cubit.load();
       expect(cubit.state.status, FeedStatus.loaded);
@@ -123,7 +128,10 @@ void main() {
         FeedPage(posts: [_post('home')], after: null),
         FeedPage(posts: [_post('pop')], after: null),
       ]);
-      final cubit = FeedCubit(getFeed: GetFeed(repo));
+      final cubit = FeedCubit(
+        getFeed: GetFeed(repo),
+        interactions: fakeInteractionsCubit(),
+      );
 
       await cubit.load(); // home
       expect(cubit.state.source, FeedSource.home);
