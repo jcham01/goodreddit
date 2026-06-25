@@ -58,7 +58,7 @@ class LlmRankingDataSourceImpl implements LlmRankingDataSource {
   ) {
     final subList = subreddits
         .map((s) {
-          return '- r/${s['name']}: "${s['title']}" (${s['subscribers']} subscribers, '
+          return '- ${s['name']}: "${s['title']}" (${s['subscribers']} subscribers, '
               '${s['active_users']} active). Description: ${s['description']}';
         })
         .join('\n');
@@ -77,6 +77,7 @@ Respond in this exact JSON format:
   ]
 }
 
+Use the bare subreddit name for "name" (e.g. "cooking", not "r/cooking").
 Only output the JSON, no other text.''';
   }
 

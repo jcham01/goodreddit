@@ -23,6 +23,11 @@ import 'package:goodreddit/features/history/domain/usecases/delete_session.dart'
 import 'package:goodreddit/features/history/domain/usecases/get_all_sessions.dart';
 import 'package:goodreddit/features/history/domain/usecases/save_session.dart';
 import 'package:goodreddit/features/history/presentation/bloc/history_cubit.dart';
+import 'package:goodreddit/features/reader/data/datasources/reddit_reader_datasource.dart';
+import 'package:goodreddit/features/reader/data/repositories/reader_repository_impl.dart';
+import 'package:goodreddit/features/reader/domain/repositories/reader_repository.dart';
+import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
+import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
 import 'package:goodreddit/features/scraper/data/datasources/reddit_scraper_datasource.dart';
 import 'package:goodreddit/features/scraper/data/repositories/scraper_repository_impl.dart';
 import 'package:goodreddit/features/scraper/domain/repositories/scraper_repository.dart';
@@ -94,6 +99,9 @@ Future<void> initDependencies() async {
     ..registerLazySingleton<RedditScraperDataSource>(
       () => RedditScraperDataSourceImpl(webClient: sl()),
     )
+    ..registerLazySingleton<RedditReaderDataSource>(
+      () => RedditReaderDataSourceImpl(webClient: sl()),
+    )
     ..registerLazySingleton<LlmRankingDataSource>(
       () => LlmRankingDataSourceImpl(dio: sl(), codex: sl()),
     )
@@ -128,6 +136,9 @@ Future<void> initDependencies() async {
     ..registerLazySingleton<ScraperRepository>(
       () => ScraperRepositoryImpl(dataSource: sl()),
     )
+    ..registerLazySingleton<ReaderRepository>(
+      () => ReaderRepositoryImpl(dataSource: sl()),
+    )
     ..registerLazySingleton<GeneratorRepository>(
       () => GeneratorRepositoryImpl(
         llmDataSource: sl(),
@@ -153,6 +164,7 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => Logout(sl()))
     ..registerLazySingleton(() => SearchAndRankSubreddits(sl()))
     ..registerLazySingleton(() => ScrapeSubredditContent(sl()))
+    ..registerLazySingleton(() => GetFeed(sl()))
     ..registerLazySingleton(() => GenerateMemoryFile(sl()))
     ..registerLazySingleton(() => GenerateSkillFile(sl()))
     ..registerLazySingleton(() => GetConfig(sl()))
@@ -169,11 +181,14 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => UpdateCubit(checkForUpdate: sl()))
     ..registerFactory(() => SearchCubit(searchAndRank: sl(), saveSession: sl()))
     ..registerFactory(() => ScraperCubit(scrapeContent: sl()))
+    ..registerFactory(() => FeedCubit(getFeed: sl()))
     ..registerFactory(
       () => GeneratorCubit(
         generateMemory: sl(),
         generateSkill: sl(),
         fileExporter: sl(),
+        saveSession: sl(),
+        getAllSessions: sl(),
       ),
     )
     ..registerFactory(

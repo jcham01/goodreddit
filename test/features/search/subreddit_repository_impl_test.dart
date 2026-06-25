@@ -94,6 +94,36 @@ void main() {
       expect(ranking.scores.every((s) => s.semanticScore == 0), isTrue);
       expect(llm.calls, 1);
     });
+
+    test('joins semantic scores even when the LLM echoes an r/ prefix', () async {
+      final repository = _repository(
+        settings: const AgentConfig(
+          provider: LlmProvider.claude,
+          apiKey: 'test-key',
+          model: 'claude-test',
+        ),
+        llm: _FakeLlmRankingDataSource(
+          response: {
+            'rankings': [
+              {'name': 'r/cooking', 'score': 0.9},
+              {'name': '/r/flutterdev', 'score': 0.2},
+            ],
+          },
+        ),
+      );
+
+      final result = await repository.searchAndRank('community');
+      final ranking = result.fold((failure) => fail(failure.message), (r) => r);
+
+      final cooking = ranking.scores.firstWhere(
+        (s) => s.subreddit.name == 'cooking',
+      );
+      final flutter = ranking.scores.firstWhere(
+        (s) => s.subreddit.name == 'flutterdev',
+      );
+      expect(cooking.semanticScore, 0.9);
+      expect(flutter.semanticScore, 0.2);
+    });
   });
 }
 

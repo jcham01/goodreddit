@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:dartz/dartz.dart';
 import 'package:goodreddit/core/error/exceptions.dart';
 import 'package:goodreddit/core/error/failures.dart';
+import 'package:goodreddit/core/util/reddit_text.dart';
 import 'package:goodreddit/features/search/data/datasources/llm_ranking_datasource.dart';
 import 'package:goodreddit/features/search/data/datasources/reddit_search_datasource.dart';
 import 'package:goodreddit/features/search/data/models/subreddit_model.dart';
@@ -35,7 +36,7 @@ class SubredditRepositoryImpl implements SubredditRepository {
       final semantic = await _semanticScores(query, subreddits);
 
       final scored = subreddits.map((sub) {
-        final ranking = semantic[sub.name.toLowerCase()];
+        final ranking = semantic[normalizeSubredditKey(sub.name)];
         return SubredditScoreModel.compute(
           subreddit: sub,
           query: query,
@@ -98,7 +99,8 @@ class SubredditRepositoryImpl implements SubredditRepository {
       final map = <String, _Ranking>{};
       for (final r in rankings) {
         if (r is Map) {
-          final name = (r['name'] as String?)?.toLowerCase();
+          final rawName = r['name'] as String?;
+          final name = rawName == null ? null : normalizeSubredditKey(rawName);
           final score = (r['score'] as num?)?.toDouble();
           if (name != null && score != null) {
             map[name] = _Ranking(

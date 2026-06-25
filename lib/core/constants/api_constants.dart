@@ -16,10 +16,15 @@ class ApiConstants {
   static String postCommentsPath(String subreddit, String postId) =>
       '/r/$subreddit/comments/$postId.json';
 
+  // Reader feed endpoints
+  static const String homeFeedPath = '/best.json'; // personalised (needs auth)
+  static const String popularFeedPath = '/r/popular/hot.json'; // anon-friendly
+
   // Default query parameters
   static const int defaultSearchLimit = 25;
   static const int defaultPostLimit = 25;
   static const int defaultCommentLimit = 50;
+  static const int defaultFeedLimit = 25;
   static const String defaultTimeFilter = 'week';
 
   // Claude API

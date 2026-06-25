@@ -24,6 +24,37 @@ class ResearchSession extends Equatable {
     required this.updatedAt,
   });
 
+  ResearchSession copyWith({
+    String? id,
+    String? query,
+    List<SubredditScore>? rankedResults,
+    String? selectedSubredditName,
+    String? memoryContent,
+    String? skillContent,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ResearchSession(
+      id: id ?? this.id,
+      query: query ?? this.query,
+      rankedResults: rankedResults ?? this.rankedResults,
+      selectedSubredditName:
+          selectedSubredditName ?? this.selectedSubredditName,
+      memoryContent: memoryContent ?? this.memoryContent,
+      skillContent: skillContent ?? this.skillContent,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, query, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    query,
+    selectedSubredditName,
+    memoryContent,
+    skillContent,
+    createdAt,
+    updatedAt,
+  ];
 }

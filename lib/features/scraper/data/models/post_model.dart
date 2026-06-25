@@ -13,6 +13,14 @@ class PostModel extends Post {
     required super.createdAt,
     super.flair,
     super.isStickied,
+    super.subreddit,
+    super.thumbnail,
+    super.preview,
+    super.isVideo,
+    super.over18,
+    super.spoiler,
+    super.locked,
+    super.upvoteRatio,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -31,7 +39,35 @@ class PostModel extends Post {
       ),
       flair: data['link_flair_text'],
       isStickied: data['stickied'] ?? false,
+      subreddit: data['subreddit'] ?? '',
+      thumbnail: data['thumbnail'] as String?,
+      preview: _parsePreview(data),
+      isVideo: data['is_video'] ?? false,
+      over18: data['over_18'] ?? false,
+      spoiler: data['spoiler'] ?? false,
+      locked: data['locked'] ?? false,
+      upvoteRatio: (data['upvote_ratio'] as num?)?.toDouble(),
     );
+  }
+
+  /// Reddit nests the preview as `preview.images[0].source.url`, HTML-entity
+  /// encoded (`&amp;`) — left as-is it 403s. Parsed defensively (the shape is
+  /// often absent).
+  static String? _parsePreview(Map<String, dynamic> data) {
+    final preview = data['preview'];
+    if (preview is Map) {
+      final images = preview['images'];
+      if (images is List && images.isNotEmpty) {
+        final first = images.first;
+        if (first is Map) {
+          final source = first['source'];
+          if (source is Map && source['url'] is String) {
+            return (source['url'] as String).replaceAll('&amp;', '&');
+          }
+        }
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -47,6 +83,13 @@ class PostModel extends Post {
       'created_utc': createdAt.millisecondsSinceEpoch ~/ 1000,
       'link_flair_text': flair,
       'stickied': isStickied,
+      'subreddit': subreddit,
+      'thumbnail': thumbnail,
+      'is_video': isVideo,
+      'over_18': over18,
+      'spoiler': spoiler,
+      'locked': locked,
+      'upvote_ratio': upvoteRatio,
     };
   }
 }
