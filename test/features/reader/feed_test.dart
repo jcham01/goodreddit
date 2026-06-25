@@ -6,6 +6,8 @@ import 'package:goodreddit/features/reader/domain/entities/comment_sort.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_page.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_source.dart';
 import 'package:goodreddit/features/reader/domain/entities/post_detail.dart';
+import 'package:goodreddit/features/reader/domain/entities/subreddit_about.dart';
+import 'package:goodreddit/features/reader/domain/entities/subreddit_sort.dart';
 import 'package:goodreddit/features/reader/domain/repositories/reader_repository.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
@@ -47,6 +49,19 @@ class _FakeReaderRepository implements ReaderRepository {
   }) async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<Either<Failure, FeedPage>> getSubredditFeed({
+    required String subreddit,
+    SubredditSort sort = SubredditSort.hot,
+    String? after,
+    int limit = 25,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, SubredditAbout>> getSubredditAbout(
+    String subreddit,
+  ) async => throw UnimplementedError();
 }
 
 void main() {

@@ -28,8 +28,11 @@ import 'package:goodreddit/features/reader/data/repositories/reader_repository_i
 import 'package:goodreddit/features/reader/domain/repositories/reader_repository.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_feed.dart';
 import 'package:goodreddit/features/reader/domain/usecases/get_post_detail.dart';
+import 'package:goodreddit/features/reader/domain/usecases/get_subreddit_about.dart';
+import 'package:goodreddit/features/reader/domain/usecases/get_subreddit_feed.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/feed_cubit.dart';
 import 'package:goodreddit/features/reader/presentation/bloc/post_detail_cubit.dart';
+import 'package:goodreddit/features/reader/presentation/bloc/subreddit_cubit.dart';
 import 'package:goodreddit/features/scraper/data/datasources/reddit_scraper_datasource.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 import 'package:goodreddit/features/scraper/data/repositories/scraper_repository_impl.dart';
@@ -169,6 +172,8 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => ScrapeSubredditContent(sl()))
     ..registerLazySingleton(() => GetFeed(sl()))
     ..registerLazySingleton(() => GetPostDetail(sl()))
+    ..registerLazySingleton(() => GetSubredditFeed(sl()))
+    ..registerLazySingleton(() => GetSubredditAbout(sl()))
     ..registerLazySingleton(() => GenerateMemoryFile(sl()))
     ..registerLazySingleton(() => GenerateSkillFile(sl()))
     ..registerLazySingleton(() => GetConfig(sl()))
@@ -188,6 +193,10 @@ Future<void> initDependencies() async {
     ..registerFactory(() => FeedCubit(getFeed: sl()))
     ..registerFactoryParam<PostDetailCubit, Post, void>(
       (post, _) => PostDetailCubit(getPostDetail: sl(), seed: post),
+    )
+    ..registerFactoryParam<SubredditCubit, String, void>(
+      (name, _) =>
+          SubredditCubit(getFeed: sl(), getAbout: sl(), name: name),
     )
     ..registerFactory(
       () => GeneratorCubit(

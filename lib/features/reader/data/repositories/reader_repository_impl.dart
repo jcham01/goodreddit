@@ -7,6 +7,8 @@ import 'package:goodreddit/features/reader/domain/entities/comment_sort.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_page.dart';
 import 'package:goodreddit/features/reader/domain/entities/feed_source.dart';
 import 'package:goodreddit/features/reader/domain/entities/post_detail.dart';
+import 'package:goodreddit/features/reader/domain/entities/subreddit_about.dart';
+import 'package:goodreddit/features/reader/domain/entities/subreddit_sort.dart';
 import 'package:goodreddit/features/reader/domain/repositories/reader_repository.dart';
 
 class ReaderRepositoryImpl implements ReaderRepository {
@@ -57,6 +59,53 @@ class ReaderRepositoryImpl implements ReaderRepository {
         limit: limit,
       );
       return Right(detail);
+    } on NotAuthenticatedException catch (e) {
+      return Left(NotAuthenticatedFailure(e.message));
+    } on RedditException catch (e) {
+      return Left(RedditFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FeedPage>> getSubredditFeed({
+    required String subreddit,
+    SubredditSort sort = SubredditSort.hot,
+    String? after,
+    int limit = ApiConstants.defaultFeedLimit,
+  }) async {
+    try {
+      final page = await dataSource.getSubredditFeed(
+        subreddit: subreddit,
+        sort: sort.path,
+        timeFilter: sort.needsTimeFilter
+            ? ApiConstants.defaultTimeFilter
+            : null,
+        after: after,
+        limit: limit,
+      );
+      return Right(page);
+    } on NotAuthenticatedException catch (e) {
+      return Left(NotAuthenticatedFailure(e.message));
+    } on RedditException catch (e) {
+      return Left(RedditFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SubredditAbout>> getSubredditAbout(
+    String subreddit,
+  ) async {
+    try {
+      final about = await dataSource.getSubredditAbout(subreddit);
+      return Right(about);
     } on NotAuthenticatedException catch (e) {
       return Left(NotAuthenticatedFailure(e.message));
     } on RedditException catch (e) {

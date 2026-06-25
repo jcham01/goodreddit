@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:goodreddit/core/util/format.dart';
+import 'package:goodreddit/features/reader/presentation/widgets/subreddit_link.dart';
 import 'package:goodreddit/features/scraper/domain/entities/post.dart';
 
 /// Title block of a post detail: subreddit · author · time, title, flair, and
@@ -19,25 +20,18 @@ class PostHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: 'r/${post.subreddit}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextSpan(
-                  text:
-                      '  ·  u/${post.author}  ·  ${relativeTime(post.createdAt)}',
+          Row(
+            children: [
+              SubredditLink(subreddit: post.subreddit),
+              Expanded(
+                child: Text(
+                  '  ·  u/${post.author}  ·  ${relativeTime(post.createdAt)}',
                   style: theme.textTheme.labelSmall?.copyWith(color: muted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(post.title, style: theme.textTheme.titleMedium),

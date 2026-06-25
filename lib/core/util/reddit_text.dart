@@ -16,3 +16,11 @@ String normalizeSubredditKey(String raw) {
   }
   return s.trim().toLowerCase();
 }
+
+/// Whether [name] is a real subreddit that the in-app browser can open.
+///
+/// Profile posts carry `subreddit == "u_<username>"` (a user's personal page,
+/// not a subreddit), and some payloads leave it empty — neither maps to a
+/// valid `/r/<name>` endpoint, so we don't make those tappable.
+bool isBrowsableSubreddit(String name) =>
+    name.isNotEmpty && !name.toLowerCase().startsWith('u_');

@@ -17,4 +17,14 @@ void main() {
       expect(normalizeSubredditKey(once), once);
     });
   });
+
+  group('isBrowsableSubreddit', () {
+    test('accepts real subreddits, rejects profiles and empties', () {
+      expect(isBrowsableSubreddit('flutterdev'), isTrue);
+      expect(isBrowsableSubreddit('AskReddit'), isTrue);
+      expect(isBrowsableSubreddit(''), isFalse);
+      expect(isBrowsableSubreddit('u_spez'), isFalse);
+      expect(isBrowsableSubreddit('U_Spez'), isFalse);
+    });
+  });
 }

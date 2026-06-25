@@ -19,6 +19,10 @@ class ApiConstants {
   // Reader feed endpoints
   static const String homeFeedPath = '/best.json'; // personalised (needs auth)
   static const String popularFeedPath = '/r/popular/hot.json'; // anon-friendly
+  static String subredditAboutPath(String subreddit) =>
+      '/r/$subreddit/about.json';
+  static String subredditListingPath(String subreddit, String sort) =>
+      '/r/$subreddit/$sort.json';
 
   // Default query parameters
   static const int defaultSearchLimit = 25;
